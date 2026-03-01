@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import BuyerLayout from '@/components/BuyerLayout';
 import Link from 'next/link';
 import PriceChart from '@/components/PriceChart';
@@ -23,7 +23,6 @@ const opportunities = [
     discount: '-15.2%',
     status: 'Active',
     urgency: 'Large Block - Institutional',
-    chartData: null,
   },
   {
     id: 2,
@@ -35,31 +34,6 @@ const opportunities = [
     discount: '-22.5%',
     status: 'Active',
     urgency: 'High Discount - Retail Friendly',
-    chartData: null,
-  },
-  {
-    id: 3,
-    name: 'ByteDance RSU',
-    type: 'RSU',
-    valuation: '$230B',
-    price: '$172.8',
-    volume: '$12M',
-    discount: '-8.5%',
-    status: 'Reviewing',
-    urgency: 'Stable Asset',
-    chartData: null,
-  },
-  {
-    id: 4,
-    name: 'ByteDance Series E-2 Preferred',
-    type: 'Preferred Stock',
-    valuation: '$245B',
-    price: '$188',
-    volume: '$100M',
-    discount: '-5%',
-    status: 'Active',
-    urgency: 'Top Tier - Long Term Hold',
-    chartData: null,
   },
 ];
 
@@ -85,8 +59,6 @@ const testimonials = [
 ];
 
 export default function HomePage() {
-  const [selectedAsset, setSelectedAsset] = useState<number | null>(null);
-
   return (
     <BuyerLayout>
       {/* Hero Section */}

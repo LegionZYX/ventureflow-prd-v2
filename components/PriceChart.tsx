@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 interface ChartProps {
   height?: number;
@@ -8,11 +8,11 @@ interface ChartProps {
 
 export default function PriceChart({ height = 200 }: ChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [isRendered, setIsRendered] = useState(false);
 
   useEffect(() => {
-    if (!containerRef.current) return;
+    if (!containerRef.current || isRendered) return;
 
-    // Simple SVG chart instead of lightweight-charts
     const width = containerRef.current.clientWidth;
     const data = generateMockData();
     
@@ -38,12 +38,12 @@ export default function PriceChart({ height = 200 }: ChartProps) {
       const bodyHeight = Math.max(Math.abs(openY - closeY), 1);
       
       return (
-        <g key={i}>
-          <line x1={x} y1={highY} x2={x} y2={lowY} stroke={color} strokeWidth="1" />
-          <rect x={x - 2} y={bodyTop} width="4" height={bodyHeight} fill={color} />
-        </g>
+        `<g key="${i}">
+          <line x1="${x}" y1="${highY}" x2="${x}" y2="${lowY}" stroke="${color}" stroke-width="1" />
+          <rect x="${x - 2}" y="${bodyTop}" width="4" height="${bodyHeight}" fill="${color}" />
+        </g>`
       );
-    });
+    }).join('');
 
     containerRef.current.innerHTML = `
       <svg width="${width}" height="${height}" class="w-full">
@@ -54,10 +54,16 @@ export default function PriceChart({ height = 200 }: ChartProps) {
           </linearGradient>
         </defs>
         ${candlesticks}
-        <polyline points="${points}" fill="none" stroke="#3b82f6" strokeWidth="2" />
+        <polyline points="${points}" fill="none" stroke="#3b82f6" stroke-width="2" />
       </svg>
     `;
-  }, [height]);
+
+    setIsRendered(true);
+
+    return () => {
+      // Cleanup if needed
+    };
+  }, [height, isRendered]);
 
   return <div ref={containerRef} style={{ height }} className="w-full" />;
 }
@@ -65,12 +71,15 @@ export default function PriceChart({ height = 200 }: ChartProps) {
 function generateMockData() {
   const data = [];
   let price = 165;
+  // Use fixed seed for consistent data
+  const seed = 42;
   for (let i = 90; i >= 0; i--) {
-    const change = (Math.random() - 0.5) * 5;
+    const pseudoRandom = ((seed + i) * 9301 + 49297) % 233280 / 233280;
+    const change = (pseudoRandom - 0.5) * 5;
     const open = price;
     const close = price + change;
-    const high = Math.max(open, close) + Math.random() * 2;
-    const low = Math.min(open, close) - Math.random() * 2;
+    const high = Math.max(open, close) + pseudoRandom * 2;
+    const low = Math.min(open, close) - pseudoRandom * 2;
     data.push({ open, high, low, close });
     price = close;
   }
