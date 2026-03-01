@@ -8,16 +8,23 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setIsLoading(true);
+    
+    // Simulate small delay for better UX
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
     if (login(email, password)) {
       router.push('/dashboard');
     } else {
       setError('Invalid email or password');
+      setIsLoading(false);
     }
   };
 
@@ -26,6 +33,9 @@ export default function LoginPage() {
       <div className="max-w-md w-full">
         <div className="bg-white/10 backdrop-blur-lg rounded-2xl shadow-2xl p-8 border border-white/20">
           <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-500 rounded-2xl mb-4">
+              <span className="text-3xl">🚀</span>
+            </div>
             <h1 className="text-3xl font-bold text-white mb-2">VentureFlow</h1>
             <p className="text-blue-200">FA Backend Management</p>
           </div>
@@ -40,9 +50,10 @@ export default function LoginPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 placeholder="admin@ventureflow.com"
                 required
+                disabled={isLoading}
               />
             </div>
 
@@ -55,30 +66,47 @@ export default function LoginPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 placeholder="admin123"
                 required
+                disabled={isLoading}
               />
             </div>
 
             {error && (
               <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-3 text-red-200 text-sm">
-                {error}
+                ⚠️ {error}
               </div>
             )}
 
             <button
               type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition-colors duration-200"
+              disabled={isLoading}
+              className={`w-full py-3 rounded-lg font-semibold transition-all duration-200 ${
+                isLoading
+                  ? 'bg-blue-400 cursor-not-allowed'
+                  : 'bg-blue-600 hover:bg-blue-700 hover:shadow-lg'
+              } text-white`}
             >
-              Sign In
+              {isLoading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  Signing in...
+                </span>
+              ) : (
+                'Sign In'
+              )}
             </button>
           </form>
 
           <div className="mt-6 pt-6 border-t border-white/10">
-            <div className="text-xs text-blue-300/70 text-center">
-              Demo Credentials:<br />
-              admin@ventureflow.com / admin123
+            <div className="bg-white/5 rounded-lg p-4">
+              <p className="text-xs text-blue-300/70 text-center mb-2">Demo Credentials:</p>
+              <div className="bg-black/20 rounded p-2 text-center">
+                <code className="text-blue-200 text-sm">admin@ventureflow.com</code>
+                <br />
+                <code className="text-blue-200 text-sm">admin123</code>
+              </div>
             </div>
           </div>
         </div>

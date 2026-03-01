@@ -21,9 +21,9 @@ export function authenticate(email: string, password: string): User | null {
 
 export function getSession(): User | null {
   if (typeof window === 'undefined') return null;
-  const session = localStorage.getItem('vf_session');
-  if (!session) return null;
   try {
+    const session = localStorage.getItem('vf_session');
+    if (!session) return null;
     return JSON.parse(session);
   } catch {
     return null;
