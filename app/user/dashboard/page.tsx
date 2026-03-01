@@ -54,7 +54,6 @@ export default function UserDashboardPage() {
   const [showResellModal, setShowResellModal] = useState(false);
 
   useEffect(() => {
-    // Check if user is logged in
     const session = localStorage.getItem('vf_user_session');
     if (!session) {
       router.push('/user/login');
@@ -87,13 +86,11 @@ export default function UserDashboardPage() {
     <BuyerLayout>
       <div className="py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-slate-900">My Portfolio</h1>
             <p className="text-slate-600 mt-1">Welcome back, {portfolio.name}</p>
           </div>
 
-          {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl p-6 text-white">
               <p className="text-sm text-blue-100">Total Portfolio Value</p>
@@ -113,7 +110,6 @@ export default function UserDashboardPage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Holdings */}
             <div className="lg:col-span-2">
               <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
                 <h2 className="text-xl font-bold text-slate-900 mb-4">My Holdings</h2>
@@ -133,7 +129,6 @@ export default function UserDashboardPage() {
                         </div>
                       </div>
 
-                      {/* Mini Chart */}
                       <div className="mb-4 h-32">
                         <PriceChart height={128} />
                       </div>
@@ -158,7 +153,7 @@ export default function UserDashboardPage() {
                           onClick={() => handleResell(holding)}
                           className="flex-1 px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors"
                         >
-                          💰 Request to Sell
+                          Request to Sell
                         </button>
                         <button className="px-4 py-2 border border-slate-300 text-slate-700 text-sm rounded-lg hover:bg-slate-50 transition-colors">
                           Details
@@ -170,7 +165,6 @@ export default function UserDashboardPage() {
               </div>
             </div>
 
-            {/* Inquiries Sidebar */}
             <div>
               <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
                 <h2 className="text-xl font-bold text-slate-900 mb-4">My Inquiries</h2>
@@ -182,4 +176,80 @@ export default function UserDashboardPage() {
                         <p className="text-sm text-slate-500">{inquiry.amount}</p>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className=
+                        <span className={`px-2 py-1 text-xs rounded-full ${
+                          inquiry.status === 'Pending' ? 'bg-yellow-100 text-yellow-700' :
+                          inquiry.status === 'In Review' ? 'bg-blue-100 text-blue-700' :
+                          inquiry.status === 'Meeting Scheduled' ? 'bg-green-100 text-green-700' :
+                          'bg-slate-100 text-slate-700'
+                        }`}>
+                          {inquiry.status}
+                        </span>
+                        <span className="text-xs text-slate-500">{inquiry.date}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <Link href="/opportunities" className="mt-4 block text-center text-blue-600 hover:text-blue-700 text-sm font-medium">
+                  + New Inquiry
+                </Link>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                <h2 className="text-lg font-bold text-slate-900 mb-4">Quick Actions</h2>
+                <div className="space-y-2">
+                  <Link href="/opportunities" className="block w-full px-4 py-3 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors">
+                    Browse Opportunities
+                  </Link>
+                  <Link href="/sell" className="block w-full px-4 py-3 bg-green-50 text-green-700 rounded-lg text-sm font-medium hover:bg-green-100 transition-colors">
+                    Sell My Shares
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {showResellModal && selectedHolding && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-bold text-slate-900 mb-4">Request to Sell</h3>
+            <p className="text-slate-600 mb-4">
+              You are requesting to sell your <strong>{selectedHolding.asset}</strong> holdings.
+            </p>
+            <div className="bg-slate-50 rounded-lg p-4 mb-4">
+              <p className="text-sm text-slate-500">Shares</p>
+              <p className="font-bold text-slate-900">{selectedHolding.shares.toLocaleString()}</p>
+              <p className="text-sm text-slate-500 mt-2">Estimated Value</p>
+              <p className="font-bold text-green-600">${selectedHolding.value.toLocaleString()}</p>
+            </div>
+            <p className="text-sm text-slate-500 mb-4">
+              An FA representative will contact you within 24 hours to discuss the sale process.
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  setShowResellModal(false);
+                  setSelectedHolding(null);
+                }}
+                className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  alert('Sell request submitted! Our team will contact you shortly.');
+                  setShowResellModal(false);
+                  setSelectedHolding(null);
+                }}
+                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              >
+                Submit Request
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </BuyerLayout>
+  );
+}
