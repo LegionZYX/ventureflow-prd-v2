@@ -106,6 +106,17 @@ pm2 start npm --name "ventureflow" -- start
 
 This is a **demo application** with static data. No real authentication or backend is connected. All data resets on page refresh.
 
+## 📚 Documentation
+
+Comprehensive documentation is available in the [`/docs`](./docs) directory:
+
+| Document | Description |
+|----------|-------------|
+| [Business Logic](./docs/BUSINESS_LOGIC.md) | Business model, user roles, core processes |
+| [Requirements](./docs/REQUIREMENTS.md) | Product requirements, user stories, KPIs |
+| [Pages Guide](./docs/PAGES_GUIDE.md) | Complete page-by-page documentation |
+| [Tech Architecture](./docs/TECH_ARCHITECTURE.md) | Technical stack, data flow, deployment |
+
 ## 📄 License
 
 Copyright © 2026 VentureFlow. All rights reserved.
