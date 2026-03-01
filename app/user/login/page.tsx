@@ -6,26 +6,13 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 export default function UserLoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
-    // Mock login - in production, this would call an API
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Store user session
-    localStorage.setItem('vf_user_session', JSON.stringify({
-      id: 'user1',
-      email,
-      name: 'John Investor',
-      type: 'investor',
-    }));
-    
+    await new Promise(resolve => setTimeout(resolve, 500));
     router.push('/user/dashboard');
   };
 
@@ -50,11 +37,10 @@ export default function UserLoginPage() {
                 <input
                   id="email"
                   type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
                   className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="investor@example.com"
                   required
+                  disabled={isLoading}
                 />
               </div>
 
@@ -65,20 +51,11 @@ export default function UserLoginPage() {
                 <input
                   id="password"
                   type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
                   className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="••••••••"
+                  placeholder="Any password works for demo"
                   required
+                  disabled={isLoading}
                 />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <label className="flex items-center">
-                  <input type="checkbox" className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
-                  <span className="ml-2 text-sm text-slate-600">Remember me</span>
-                </label>
-                <a href="#" className="text-sm text-blue-600 hover:text-blue-700">Forgot password?</a>
               </div>
 
               <button
@@ -95,9 +72,6 @@ export default function UserLoginPage() {
             </form>
 
             <div className="mt-6 pt-6 border-t border-slate-200">
-              <p className="text-center text-sm text-slate-600 mb-4">
-                Don't have an investor account?
-              </p>
               <Link
                 href="/kyc"
                 className="block w-full py-3 text-center bg-slate-100 text-slate-700 font-semibold rounded-lg hover:bg-slate-200 transition-colors"
@@ -116,7 +90,6 @@ export default function UserLoginPage() {
             </div>
           </div>
 
-          {/* Demo Credentials */}
           <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
             <p className="text-sm font-medium text-blue-900 mb-2">Demo Credentials:</p>
             <code className="text-xs text-blue-700">Any email / Any password</code>

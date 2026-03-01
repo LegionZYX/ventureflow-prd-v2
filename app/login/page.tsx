@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -93,6 +94,15 @@ export default function LoginPage() {
                 <code className="text-blue-200 text-sm">admin123</code>
               </div>
             </div>
+          </div>
+
+          <div className="mt-6">
+            <Link
+              href="/user/login"
+              className="block w-full py-3 text-center bg-white/10 text-white font-semibold rounded-lg hover:bg-white/20 transition-colors border border-white/20"
+            >
+              👤 Investor Login →
+            </Link>
           </div>
         </div>
       </div>

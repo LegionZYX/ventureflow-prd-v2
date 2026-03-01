@@ -1,0 +1,13 @@
+
+> ventureflow-fa-backend@0.1.0 dev
+> next dev
+
+⚠ Port 3000 is in use by process 50784, using available port 3003 instead.
+▲ Next.js 16.1.6 (Turbopack)
+- Local:         http://localhost:3003
+- Network:       http://172.19.0.1:3003
+
+✓ Starting...
+⨯ Unable to acquire lock at E:\Vibe coding\VentureFlow\ventureflow-fa-backend\.next\dev\lock, is another instance of next dev running?
+  Suggestion: If you intended to restart next dev, terminate the other process, and then try again.
+[?25h

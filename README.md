@@ -1,36 +1,111 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# VentureFlow - FA Backend Demo
 
-## Getting Started
+ByteDance Equity Secondary Market Trading Platform - FA Management System Demo
 
-First, run the development server:
+## 🚀 Quick Start
 
+### Development
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Production
+```bash
+npm run build
+npm start
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Server runs on http://localhost:3000
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 📋 Demo Credentials
 
-## Learn More
+### FA/Admin Login
+- **URL:** http://localhost:3000/login
+- **Email:** admin@ventureflow.com
+- **Password:** admin123
+- **Note:** Any password works for demo
 
-To learn more about Next.js, take a look at the following resources:
+### Investor Login  
+- **URL:** http://localhost:3000/user/login
+- **Credentials:** Any email / Any password
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🗺️ Site Map
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Public Pages
+- `/` - Landing Page
+- `/opportunities` - Investment Opportunities
+- `/kyc` - KYC Verification
+- `/sell` - Sell Shares
 
-## Deploy on Vercel
+### FA Backend (Requires Login)
+- `/dashboard` - FA Dashboard
+- `/dashboard/buyers` - Buyer Management
+- `/dashboard/orders` - Order Management
+- `/dashboard/assets` - Asset Management
+- `/dashboard/deals` - Deal Pipeline
+- `/dashboard/agreements` - Agreements
+- `/dashboard/commission` - Commission Tracking
+- `/dashboard/ai-tools` - AI Analysis Center
+- `/dashboard/settings` - Settings
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Investor Portal (Requires Login)
+- `/user/login` - Investor Login
+- `/user/dashboard` - Portfolio Dashboard
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📝 Change Log
+
+### v1.1.0 (2026-03-01)
+- ✅ Added Investor Login link on FA Login page
+- ✅ Added FA/Admin Login link on Investor Login page
+- ✅ Simplified authentication (no loading states)
+- ✅ Fixed PriceChart component (static SVG, no re-renders)
+- ✅ All pages use static data for demo purposes
+
+### v1.0.0 (2026-02-28)
+- ✅ Initial release
+- ✅ Complete FA Backend with 9 management pages
+- ✅ Investor Portal with portfolio dashboard
+- ✅ Static price charts with "Reference Price" label
+- ✅ Responsive design with Tailwind CSS
+
+## 🛠️ Tech Stack
+
+- **Framework:** Next.js 16 (App Router)
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS
+- **Deployment:** Vercel / Any Node.js host
+
+## 📦 Deployment
+
+### Vercel (Recommended)
+```bash
+npm install -g vercel
+vercel deploy
+```
+
+### Docker
+```dockerfile
+FROM node:20-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+COPY . .
+RUN npm run build
+EXPOSE 3000
+CMD ["npm", "start"]
+```
+
+### Manual
+```bash
+npm run build
+pm2 start npm --name "ventureflow" -- start
+```
+
+## ⚠️ Demo Notice
+
+This is a **demo application** with static data. No real authentication or backend is connected. All data resets on page refresh.
+
+## 📄 License
+
+Copyright © 2026 VentureFlow. All rights reserved.
