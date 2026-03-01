@@ -1,18 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import BuyerLayout from '@/components/BuyerLayout';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import PriceChart from '@/components/PriceChart';
-
-interface UserPortfolio {
-  name: string;
-  email: string;
-  holdings: Holding[];
-  inquiries: Inquiry[];
-  totalValue: string;
-}
 
 interface Holding {
   id: number;
@@ -32,7 +23,7 @@ interface Inquiry {
   date: string;
 }
 
-const mockPortfolio: UserPortfolio = {
+const portfolio = {
   name: 'John Investor',
   email: 'investor@example.com',
   totalValue: '$2,450,000',
@@ -48,37 +39,13 @@ const mockPortfolio: UserPortfolio = {
 };
 
 export default function UserDashboardPage() {
-  const router = useRouter();
-  const [portfolio, setPortfolio] = useState<UserPortfolio | null>(null);
   const [selectedHolding, setSelectedHolding] = useState<Holding | null>(null);
   const [showResellModal, setShowResellModal] = useState(false);
-
-  useEffect(() => {
-    const session = localStorage.getItem('vf_user_session');
-    if (!session) {
-      router.push('/user/login');
-      return;
-    }
-    setPortfolio(mockPortfolio);
-  }, [router]);
 
   const handleResell = (holding: Holding) => {
     setSelectedHolding(holding);
     setShowResellModal(true);
   };
-
-  if (!portfolio) {
-    return (
-      <BuyerLayout>
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
-            <p className="text-slate-600">Loading portfolio...</p>
-          </div>
-        </div>
-      </BuyerLayout>
-    );
-  }
 
   const totalGainLoss = portfolio.holdings.reduce((sum, h) => sum + h.gainLoss, 0);
 

@@ -7,25 +7,16 @@ import { useRouter } from 'next/navigation';
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
     setIsLoading(true);
-    
-    // Simulate small delay for better UX
     await new Promise(resolve => setTimeout(resolve, 500));
-    
-    if (login(email, password)) {
-      router.push('/dashboard');
-    } else {
-      setError('Invalid email or password');
-      setIsLoading(false);
-    }
+    login();
+    router.push('/dashboard');
   };
 
   return (
@@ -72,12 +63,6 @@ export default function LoginPage() {
                 disabled={isLoading}
               />
             </div>
-
-            {error && (
-              <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-3 text-red-200 text-sm">
-                ⚠️ {error}
-              </div>
-            )}
 
             <button
               type="submit"
