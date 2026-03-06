@@ -1,10 +1,15 @@
-import { Buyer, Asset, Deal, Agreement } from './mockData';
+import { Buyer, Asset, Deal, Agreement, Company, PublicDeal, ShareRecord, Referral } from './mockData';
 
 const STORAGE_KEYS = {
   BUYERS: 'vf_buyers',
   ASSETS: 'vf_assets',
   DEALS: 'vf_deals',
   AGREEMENTS: 'vf_agreements',
+  // 新增 key
+  COMPANIES: 'vf_companies',
+  PUBLIC_DEALS: 'vf_public_deals',
+  SHARE_RECORDS: 'vf_share_records',
+  REFERRALS: 'vf_referrals',
 };
 
 export function loadData<T>(key: string, defaultValue: T): T {
@@ -53,6 +58,40 @@ export function loadAgreements(): Agreement[] {
 
 export function saveAgreements(agreements: Agreement[]): void {
   saveData(STORAGE_KEYS.AGREEMENTS, agreements);
+}
+
+// === 新增存储函数 ===
+
+export function loadCompanies(): Company[] {
+  return loadData<Company[]>(STORAGE_KEYS.COMPANIES, []);
+}
+
+export function saveCompanies(companies: Company[]): void {
+  saveData(STORAGE_KEYS.COMPANIES, companies);
+}
+
+export function loadPublicDeals(): PublicDeal[] {
+  return loadData<PublicDeal[]>(STORAGE_KEYS.PUBLIC_DEALS, []);
+}
+
+export function savePublicDeals(deals: PublicDeal[]): void {
+  saveData(STORAGE_KEYS.PUBLIC_DEALS, deals);
+}
+
+export function loadShareRecords(): ShareRecord[] {
+  return loadData<ShareRecord[]>(STORAGE_KEYS.SHARE_RECORDS, []);
+}
+
+export function saveShareRecords(records: ShareRecord[]): void {
+  saveData(STORAGE_KEYS.SHARE_RECORDS, records);
+}
+
+export function loadReferrals(): Referral[] {
+  return loadData<Referral[]>(STORAGE_KEYS.REFERRALS, []);
+}
+
+export function saveReferrals(referrals: Referral[]): void {
+  saveData(STORAGE_KEYS.REFERRALS, referrals);
 }
 
 export function resetAllData(): void {

@@ -1,3 +1,4 @@
+// === 现有类型（保持兼容） ===
 export interface Buyer {
   id: string;
   name: string;
@@ -31,6 +32,60 @@ export interface Deal {
   splitRules: { platform: number; broker: number[] };
 }
 
+// === 新增类型：Demo 最小化设计 ===
+
+/** 公司实体 */
+export interface Company {
+  id: string;                    // URL 友好 ID: "bytedance", "videoai"
+  name: string;                  // 显示名称: "ByteDance"
+  logo?: string;                 // Emoji 或图片 URL
+  industry: string;              // "Technology", "AI", "Space"
+  description: string;           // 公司描述
+  valuation: string;             // "$225B"
+  foundedYear?: number;          // 2012
+  headquarters: string;          // "Beijing, China"
+  tags: string[];                // ["Unicorn", "Pre-IPO"]
+  status: 'active' | 'inactive';
+}
+
+/** 重新定义的 Deal（用于公开侧展示） */
+export interface PublicDeal {
+  id: string;
+  companyId: string;             // 关联到 Company
+  name: string;                  // "Series H Common Stock"
+  type: string;                  // "Common Stock", "Employee Options"
+  valuation: string;             // "$225B"
+  price: string;                 // "$165.5"
+  volume: string;                // "$50M"
+  discount?: string;             // "-15.2%"
+  description: string;
+  status: 'active' | 'sold' | 'suspended';
+  urgency?: string;              // "Large Block - Institutional"
+}
+
+/** 分享记录 */
+export interface ShareRecord {
+  id: string;                    // 唯一 ID（用于 URL）
+  dealId: string;                // 关联的 Deal ID
+  sharerName: string;             // 分享人姓名（展示用）
+  createdAt: string;             // ISO 8601
+  clickCount: number;            // 点击次数
+  conversionCount: number;       // 转化次数
+}
+
+/** 推荐关系 */
+export interface Referral {
+  id: string;
+  shareId: string;               // 关联的 ShareRecord ID
+  referredName: string;          // 被推荐人姓名
+  referredEmail: string;         // 被推荐人邮箱
+  dealId: string;                // 感兴趣的 Deal
+  kycCompleted: boolean;         // 是否完成 KYC
+  agreementSigned: boolean;      // 是否签署 FA Agreement
+  completedAt?: string;          // 完成时间
+  createdAt: string;
+}
+
 export interface Agreement {
   id: string;
   type: 'fa' | 'subscription';
@@ -46,6 +101,126 @@ export const mockBuyers: Buyer[] = [
   { id: '4', name: 'Zhang Broker Ltd', type: 'broker', kycStatus: 'approved', pofStatus: 'verified', email: 'deal@zhangbroker.com', createdAt: '2026-02-20' },
   { id: '5', name: 'Sarah Chen', type: 'individual', kycStatus: 'approved', pofStatus: 'verified', email: 'sarah.chen@email.com', createdAt: '2026-02-22' },
 ];
+
+// === 新增 Mock 数据：Company ===
+export const mockCompanies: Company[] = [
+  {
+    id: 'bytedance',
+    name: 'ByteDance',
+    logo: '🦄',
+    industry: 'Technology',
+    description: 'Chinese multinational internet technology company operating various content platforms, including TikTok and Douyin.',
+    valuation: '$225B',
+    foundedYear: 2012,
+    headquarters: 'Beijing, China',
+    tags: ['Unicorn', 'Tech Giant', 'Pre-IPO'],
+    status: 'active',
+  },
+  {
+    id: 'videoai',
+    name: 'VideoAI Inc',
+    logo: '🎬',
+    industry: 'AI',
+    description: 'AI-powered video editing platform, official overseas partner of ByteDance.',
+    valuation: '$500M',
+    foundedYear: 2020,
+    headquarters: 'San Francisco, USA',
+    tags: ['AI', 'Series A', 'ByteDance Partner'],
+    status: 'active',
+  },
+  {
+    id: 'spacecompute',
+    name: 'SpaceCompute LP',
+    logo: '🚀',
+    industry: 'Space',
+    description: 'Space computing infrastructure provider backed by Oracle $10B order, NVIDIA partner.',
+    valuation: '$10B',
+    foundedYear: 2019,
+    headquarters: 'Austin, Texas',
+    tags: ['Space Tech', 'Series B', 'Enterprise'],
+    status: 'active',
+  },
+];
+
+// === 新增 Mock 数据：PublicDeal（用于公开侧展示） ===
+export const mockPublicDeals: PublicDeal[] = [
+  {
+    id: '1',
+    companyId: 'bytedance',
+    name: 'Series H Common Stock',
+    type: 'Common Stock',
+    valuation: '$225B',
+    price: '$165.5',
+    volume: '$50M',
+    discount: '-15.2%',
+    description: 'Large institutional block, 50M shares available',
+    status: 'active',
+    urgency: 'Large Block - Institutional',
+  },
+  {
+    id: '2',
+    companyId: 'bytedance',
+    name: 'Employee Options Package',
+    type: 'Employee Options',
+    valuation: '$210B',
+    price: '$142',
+    volume: '$5M',
+    discount: '-22.5%',
+    description: 'High discount, retail-friendly minimum',
+    status: 'active',
+    urgency: 'High Discount - Retail Friendly',
+  },
+  {
+    id: '3',
+    companyId: 'bytedance',
+    name: 'RSU Transfer',
+    type: 'RSU',
+    valuation: '$230B',
+    price: '$172.8',
+    volume: '$12M',
+    discount: '-8.5%',
+    description: 'Restricted Stock Unit transfer',
+    status: 'active',
+  },
+  {
+    id: '4',
+    companyId: 'bytedance',
+    name: 'Series E-2 Preferred',
+    type: 'Preferred Stock',
+    valuation: '$245B',
+    price: '$188',
+    volume: '$100M',
+    discount: '-5%',
+    description: 'Top tier, long-term hold with liquidation preference',
+    status: 'active',
+  },
+  {
+    id: '5',
+    companyId: 'videoai',
+    name: 'Series A Preferred',
+    type: 'Preferred Stock',
+    valuation: '$500M',
+    price: '$9.0',
+    volume: '$2M',
+    description: 'Early-stage AI video editing platform',
+    status: 'active',
+  },
+  {
+    id: '6',
+    companyId: 'spacecompute',
+    name: 'Series B Common Stock',
+    type: 'Common Stock',
+    valuation: '$10B',
+    price: '$100',
+    volume: '$100M',
+    description: 'Enterprise space computing infrastructure',
+    status: 'active',
+  },
+];
+
+// === 新增 Mock 数据：ShareRecord 和 Referral（初始为空） ===
+export const mockShareRecords: ShareRecord[] = [];
+export const mockReferrals: Referral[] = [];
 
 export const mockAssets: Asset[] = [
   { id: '1', name: '字节跳动 H 轮普通股', company: 'ByteDance', type: 'byteDance', valuation: 225000000000, priceRange: { min: 160, max: 170 }, lastMatchedPrice: 165.5, description: '机构级大额包，5000 万股', status: 'active' },
