@@ -3,19 +3,18 @@
 import React, { useState, useEffect } from 'react';
 import BuyerLayout from '@/components/BuyerLayout';
 import Link from 'next/link';
+import { useLang } from '@/contexts/LangContext';
 import { Company, mockCompanies, mockPublicDeals } from '@/lib/mockData';
 import { loadCompanies, saveCompanies } from '@/lib/storage';
 import { initializeDefaultData } from '@/lib/share';
 
 export default function OpportunitiesPage() {
+  const { t } = useLang();
   const [companies, setCompanies] = useState<Company[]>([]);
   const [filter, setFilter] = useState('All');
 
   useEffect(() => {
-    // 初始化默认数据
     initializeDefaultData(mockCompanies, mockPublicDeals);
-
-    // 加载公司数据
     const loaded = loadCompanies();
     if (loaded.length > 0) {
       setCompanies(loaded);
@@ -29,7 +28,12 @@ export default function OpportunitiesPage() {
     ? companies
     : companies.filter(c => c.industry === filter || c.tags.includes(filter));
 
-  const industries = ['All', 'Technology', 'AI', 'Space'];
+  const industries = [
+    { key: 'All', label: 'All' },
+    { key: 'Technology', label: 'Technology' },
+    { key: 'AI', label: 'AI' },
+    { key: 'Space', label: 'Space' },
+  ];
 
   return (
     <BuyerLayout>
@@ -37,10 +41,10 @@ export default function OpportunitiesPage() {
       <section className="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-            Investment Opportunities
+            {t('opp.page.title')}
           </h1>
           <p className="text-blue-100 text-lg max-w-3xl">
-            Browse verified companies and explore exclusive equity deals in ByteDance and other pre-IPO unicorns.
+            {t('opp.page.description')}
           </p>
         </div>
       </section>
@@ -53,15 +57,15 @@ export default function OpportunitiesPage() {
             <div className="flex flex-wrap gap-2">
               {industries.map((type) => (
                 <button
-                  key={type}
-                  onClick={() => setFilter(type)}
+                  key={type.key}
+                  onClick={() => setFilter(type.key)}
                   className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                    filter === type
+                    filter === type.key
                       ? 'bg-blue-600 text-white'
                       : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50'
                   }`}
                 >
-                  {type}
+                  {type.label}
                 </button>
               ))}
             </div>
@@ -69,24 +73,24 @@ export default function OpportunitiesPage() {
               href="/sell"
               className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center gap-2"
             >
-              💼 Sell Your Shares
+              {t('opp.page.sellShares')}
             </Link>
           </div>
 
           {/* Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
             <div className="bg-white p-4 rounded-xl border border-slate-200">
-              <p className="text-sm text-slate-500">Total Companies</p>
+              <p className="text-sm text-slate-500">{t('opp.page.totalCompanies')}</p>
               <p className="text-2xl font-bold text-slate-900">{companies.length}</p>
             </div>
             <div className="bg-white p-4 rounded-xl border border-slate-200">
-              <p className="text-sm text-slate-500">Active Listings</p>
+              <p className="text-sm text-slate-500">{t('opp.page.activeListings')}</p>
               <p className="text-2xl font-bold text-green-600">
                 {companies.filter(c => c.status === 'active').length}
               </p>
             </div>
             <div className="bg-white p-4 rounded-xl border border-slate-200">
-              <p className="text-sm text-slate-500">Total Valuation</p>
+              <p className="text-sm text-slate-500">{t('opp.page.totalValuation')}</p>
               <p className="text-2xl font-bold text-slate-900">$235.5B</p>
             </div>
           </div>
@@ -146,7 +150,7 @@ export default function OpportunitiesPage() {
                 {/* CTA */}
                 <div className="text-center">
                   <button className="w-full px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors font-medium">
-                    View Deals →
+                    {t('opp.page.learnMore')} →
                   </button>
                 </div>
               </Link>
