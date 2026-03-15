@@ -2,17 +2,23 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useLang } from '@/contexts/LangContext';
 
 const navItems = [
-  { name: 'Home', href: '/' },
-  { name: 'Opportunities', href: '/opportunities' },
-  { name: 'Sell Shares', href: '/sell' },
-  { name: 'About', href: '/about' },
-  { name: 'Contact', href: '/contact' },
+  { name: 'nav.home', href: '/' },
+  { name: 'nav.opportunities', href: '/opportunities' },
+  { name: 'nav.sell', href: '/sell' },
+  { name: 'nav.about', href: '/about' },
+  { name: 'nav.contact', href: '/contact' },
 ];
 
 export default function BuyerLayout({ children }: { children: React.ReactNode }) {
+  const { lang, setLang, t } = useLang();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const toggleLang = () => {
+    setLang(lang === 'en' ? 'zh' : 'en');
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -31,19 +37,31 @@ export default function BuyerLayout({ children }: { children: React.ReactNode })
             {/* Desktop Nav */}
             <div className="hidden md:flex items-center gap-8">
               {navItems.map((item) => (
-                <Link key={item.href} href={item.href} className="text-slate-600 hover:text-slate-900 font-medium transition-colors">
-                  {item.name}
+                <Link 
+                  key={item.href} 
+                  href={item.href} 
+                  className="text-slate-600 hover:text-slate-900 font-medium transition-colors"
+                >
+                  {t(item.name)}
                 </Link>
               ))}
             </div>
 
-            {/* Auth Buttons */}
+            {/* Right Side: Lang Switcher + Auth Buttons */}
             <div className="hidden md:flex items-center gap-4">
-              <Link href="/login" className="text-slate-600 hover:text-slate-900 font-medium transition-colors">
-                Log in
+              {/* Language Switcher */}
+              <button
+                onClick={toggleLang}
+                className="px-3 py-1.5 text-sm border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors font-medium"
+              >
+                {lang === 'en' ? '🇺🇸 EN' : '🇨🇳 中文'}
+              </button>
+              
+              <Link href="/user/login" className="text-slate-600 hover:text-slate-900 font-medium transition-colors">
+                {t('nav.login')}
               </Link>
               <Link href="/kyc" className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">
-                Get Started
+                {t('nav.getStarted')}
               </Link>
             </div>
 
@@ -61,6 +79,31 @@ export default function BuyerLayout({ children }: { children: React.ReactNode })
         {mobileMenuOpen && (
           <div className="md:hidden border-t border-slate-200 bg-white">
             <div className="px-4 py-4 space-y-4">
+              {/* Language Switcher Mobile */}
+              <div className="flex items-center gap-2 pb-4 border-b border-slate-200">
+                <span className="text-sm text-slate-600">Language:</span>
+                <button
+                  onClick={toggleLang}
+                  className={`px-3 py-1 text-sm rounded-lg border ${
+                    lang === 'en' 
+                      ? 'bg-blue-600 text-white border-blue-600' 
+                      : 'bg-white text-slate-700 border-slate-300'
+                  }`}
+                >
+                  EN
+                </button>
+                <button
+                  onClick={toggleLang}
+                  className={`px-3 py-1 text-sm rounded-lg border ${
+                    lang === 'zh' 
+                      ? 'bg-blue-600 text-white border-blue-600' 
+                      : 'bg-white text-slate-700 border-slate-300'
+                  }`}
+                >
+                  中文
+                </button>
+              </div>
+              
               {navItems.map((item) => (
                 <Link 
                   key={item.href} 
@@ -68,15 +111,15 @@ export default function BuyerLayout({ children }: { children: React.ReactNode })
                   className="block text-slate-600 hover:text-slate-900 font-medium"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  {item.name}
+                  {t(item.name)}
                 </Link>
               ))}
               <div className="pt-4 border-t border-slate-200 space-y-2">
-                <Link href="/login" className="block text-center text-slate-600 font-medium py-2">
-                  Log in
+                <Link href="/user/login" className="block text-center text-slate-600 font-medium py-2">
+                  {t('nav.login')}
                 </Link>
                 <Link href="/kyc" className="block text-center bg-blue-600 text-white font-medium py-2 rounded-lg">
-                  Get Started
+                  {t('nav.getStarted')}
                 </Link>
               </div>
             </div>
@@ -102,15 +145,15 @@ export default function BuyerLayout({ children }: { children: React.ReactNode })
               </p>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">Platform</h4>
+              <h4 className="font-semibold mb-4">{t('footer.platform')}</h4>
               <ul className="space-y-2 text-slate-400 text-sm">
-                <li><Link href="/opportunities" className="hover:text-white">Opportunities</Link></li>
-                <li><Link href="/kyc" className="hover:text-white">Get Started</Link></li>
-                <li><Link href="/about" className="hover:text-white">About Us</Link></li>
+                <li><Link href="/opportunities" className="hover:text-white">{t('nav.opportunities')}</Link></li>
+                <li><Link href="/kyc" className="hover:text-white">{t('nav.getStarted')}</Link></li>
+                <li><Link href="/about" className="hover:text-white">{t('nav.about')}</Link></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">Legal</h4>
+              <h4 className="font-semibold mb-4">{t('footer.legal')}</h4>
               <ul className="space-y-2 text-slate-400 text-sm">
                 <li><a href="#" className="hover:text-white">Terms of Service</a></li>
                 <li><a href="#" className="hover:text-white">Privacy Policy</a></li>
@@ -118,7 +161,7 @@ export default function BuyerLayout({ children }: { children: React.ReactNode })
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">Contact</h4>
+              <h4 className="font-semibold mb-4">{t('footer.contact')}</h4>
               <ul className="space-y-2 text-slate-400 text-sm">
                 <li>contact@ventureflow.com</li>
                 <li>Hong Kong, China</li>
@@ -126,7 +169,7 @@ export default function BuyerLayout({ children }: { children: React.ReactNode })
             </div>
           </div>
           <div className="mt-8 pt-8 border-t border-slate-800 text-center text-slate-400 text-sm">
-            © 2026 VentureFlow. All rights reserved.
+            {t('footer.rights')}
           </div>
         </div>
       </footer>

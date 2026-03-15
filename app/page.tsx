@@ -3,13 +3,14 @@
 import React from 'react';
 import BuyerLayout from '@/components/BuyerLayout';
 import Link from 'next/link';
+import { useLang } from '@/contexts/LangContext';
 import PriceChart from '@/components/PriceChart';
 
 const stats = [
-  { label: 'Implied Valuation', value: '$225B', change: '+4.2%', positive: true },
-  { label: 'Monthly Volume', value: '$1.45B', change: '+12.5%', positive: true },
-  { label: 'Avg Discount', value: '-1.2%', change: 'vs Series F', positive: false },
-  { label: 'Active Buyers', value: '1,240+', change: '+85 this month', positive: true },
+  { label: 'stat.valuation', value: '$225B', change: '+4.2%', positive: true },
+  { label: 'stat.volume', value: '$1.45B', change: '+12.5%', positive: true },
+  { label: 'stat.discount', value: '-1.2%', change: 'vs Series F', positive: false },
+  { label: 'stat.buyers', value: '1,240+', change: '+85 this month', positive: true },
 ];
 
 const opportunities = [
@@ -59,6 +60,8 @@ const testimonials = [
 ];
 
 export default function HomePage() {
+  const { t } = useLang();
+
   return (
     <BuyerLayout>
       {/* Hero Section */}
@@ -69,28 +72,27 @@ export default function HomePage() {
           <div className="text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-blue-200 text-sm mb-6">
               <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-              ByteDance Officially Authorized Platform
+              {t('hero.badge')}
             </div>
             
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6">
-              ByteDance Equity
+              {t('hero.title1')}
               <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
-                Secondary Market
+                {t('hero.title2')}
               </span>
             </h1>
             
             <p className="text-xl text-blue-100 max-w-3xl mx-auto mb-8">
-              The world's first officially authorized equity trading platform for ByteDance.
-              Complete KYC, equity management, and escrow services for family offices and institutional investors.
+              {t('hero.description')}
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/kyc" className="px-8 py-4 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/30">
-                Start KYC Verification
+                {t('hero.startKYC')}
               </Link>
               <Link href="/opportunities" className="px-8 py-4 bg-white/10 backdrop-blur-sm text-white font-semibold rounded-xl hover:bg-white/20 transition-colors border border-white/20">
-                Browse Opportunities
+                {t('hero.browse')}
               </Link>
             </div>
           </div>
@@ -102,7 +104,7 @@ export default function HomePage() {
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
               {stats.map((stat) => (
                 <div key={stat.label} className="text-center">
-                  <p className="text-sm text-blue-200 mb-1">{stat.label}</p>
+                  <p className="text-sm text-blue-200 mb-1">{t(stat.label)}</p>
                   <p className="text-3xl font-bold text-white">{stat.value}</p>
                   <p className={`text-sm mt-1 ${stat.positive ? 'text-green-400' : 'text-blue-300'}`}>
                     {stat.change}
@@ -118,39 +120,39 @@ export default function HomePage() {
       <section className="py-20 bg-slate-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-slate-900 mb-4">Why Choose VentureFlow?</h2>
+            <h2 className="text-3xl font-bold text-slate-900 mb-4">{t('features.title')}</h2>
             <p className="text-slate-600 max-w-2xl mx-auto">
-              One-stop ByteDance equity trading service, from KYC verification to closing, with professional support throughout.
+              {t('features.description')}
             </p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[
-              { icon: '🔒', title: 'KYC Verification', description: 'HKMA-compliant institutional verification process ensuring regulatory compliance.' },
-              { icon: '📊', title: 'Equity Management', description: 'Carta-inspired equity management tools to track your portfolio performance in real-time.' },
-              { icon: '💼', title: 'Deal Execution', description: 'Exclusive deal rooms and HK bank escrow accounts ensuring transaction security.' },
-              { icon: '✅', title: 'Compliance', description: 'ByteDance official authorization with legal witness and full legal protection.' },
+              { icon: '🔒', title: 'features.kyc.title', description: 'features.kyc.desc' },
+              { icon: '📊', title: 'features.equity.title', description: 'features.equity.desc' },
+              { icon: '💼', title: 'features.deal.title', description: 'features.deal.desc' },
+              { icon: '✅', title: 'features.compliance.title', description: 'features.compliance.desc' },
             ].map((feature) => (
               <div key={feature.title} className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
                 <span className="text-4xl mb-4 block">{feature.icon}</span>
-                <h3 className="text-lg font-semibold text-slate-900 mb-2">{feature.title}</h3>
-                <p className="text-slate-600 text-sm">{feature.description}</p>
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">{t(feature.title)}</h3>
+                <p className="text-slate-600 text-sm">{t(feature.description)}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Opportunities with Chart */}
+      {/* Opportunities Section */}
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h2 className="text-3xl font-bold text-slate-900 mb-2">Featured Opportunities</h2>
-              <p className="text-slate-600">Curated ByteDance equity deals with verified valuations</p>
+              <h2 className="text-3xl font-bold text-slate-900 mb-2">{t('opp.title')}</h2>
+              <p className="text-slate-600">{t('opp.description')}</p>
             </div>
             <Link href="/opportunities" className="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1">
-              View All <span>→</span>
+              {t('opp.viewAll')} <span>→</span>
             </Link>
           </div>
           
@@ -169,7 +171,6 @@ export default function HomePage() {
                   </span>
                 </div>
                 
-                {/* Chart */}
                 <div className="mb-4">
                   <PriceChart height={200} />
                 </div>
@@ -209,8 +210,10 @@ export default function HomePage() {
       <section className="py-20 bg-slate-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-slate-900 mb-4">Trusted by Investors</h2>
-            <p className="text-slate-600">Over 500 institutions and family offices completed their ByteDance equity allocation through our platform</p>
+            <h2 className="text-3xl font-bold text-slate-900 mb-4">{t('testimonials.title')}</h2>
+            <p className="text-slate-600">
+              {t('testimonials.description')}
+            </p>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -233,7 +236,7 @@ export default function HomePage() {
                 </div>
                 {testimonial.verified && (
                   <p className="text-xs text-green-600 mt-3 flex items-center gap-1">
-                    ✓ Verified Investor
+                    ✓ {t('testimonials.verified')}
                   </p>
                 )}
               </div>
@@ -246,18 +249,17 @@ export default function HomePage() {
       <section className="py-20 bg-gradient-to-r from-blue-600 to-purple-600">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold text-white mb-4">
-            Start Your Equity Investment Journey
+            {t('cta.title')}
           </h2>
           <p className="text-blue-100 mb-8">
-            Whether you're looking for early institutional blocks or employee option transfers,
-            our professional team provides end-to-end support.
+            {t('cta.description')}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/opportunities" className="px-8 py-4 bg-white text-blue-600 font-semibold rounded-xl hover:bg-blue-50 transition-colors">
-              Browse Opportunities
+              {t('cta.browse')}
             </Link>
             <Link href="/contact" className="px-8 py-4 bg-white/10 backdrop-blur-sm text-white font-semibold rounded-xl hover:bg-white/20 transition-colors border border-white/20">
-              Contact Advisor
+              {t('cta.contact')}
             </Link>
           </div>
         </div>
