@@ -3,8 +3,10 @@
 import React, { useState } from 'react';
 import BuyerLayout from '@/components/BuyerLayout';
 import Link from 'next/link';
+import { useLang } from '@/contexts/LangContext';
 
 export default function ContactPage() {
+  const { t } = useLang();
   const [formData, setFormData] = useState({
     name: '',
     company: '',
