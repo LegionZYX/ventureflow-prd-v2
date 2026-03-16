@@ -28,12 +28,32 @@ export default function OpportunitiesPage() {
     ? companies
     : companies.filter(c => c.industry === filter || c.tags.includes(filter));
 
+  const translateIndustry = (industry: string) => {
+    if (t('nav.home') === '首页') {
+      const translations: Record<string, string> = {
+        'Technology': '科技',
+        'AI': '人工智能',
+        'Space': '航天',
+        'All': '全部',
+      };
+      return translations[industry] || industry;
+    }
+    return industry;
+  };
+
   const industries = [
     { key: 'All', label: 'All' },
     { key: 'Technology', label: 'Technology' },
     { key: 'AI', label: 'AI' },
     { key: 'Space', label: 'Space' },
   ];
+
+  const getStatusText = (isActive: boolean) => {
+    if (t('nav.home') === '首页') {
+      return isActive ? '活跃' : '未活跃';
+    }
+    return isActive ? 'Active' : 'Inactive';
+  };
 
   return (
     <BuyerLayout>
@@ -65,7 +85,7 @@ export default function OpportunitiesPage() {
                       : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50'
                   }`}
                 >
-                  {type.label}
+                  {translateIndustry(type.label)}
                 </button>
               ))}
             </div>
@@ -108,13 +128,13 @@ export default function OpportunitiesPage() {
                     <span className="text-4xl">{company.logo}</span>
                     <div>
                       <h3 className="font-semibold text-slate-900 text-lg">{company.name}</h3>
-                      <p className="text-sm text-slate-500">{company.industry}</p>
+                      <p className="text-sm text-slate-500">{translateIndustry(company.industry)}</p>
                     </div>
                   </div>
                   <span className={`px-3 py-1 text-xs rounded-full font-medium ${
                     company.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-700'
                   }`}>
-                    {company.status === 'active' ? 'Active' : 'Inactive'}
+                    {getStatusText(company.status === 'active')}
                   </span>
                 </div>
 
@@ -125,15 +145,15 @@ export default function OpportunitiesPage() {
                 {/* Stats Grid */}
                 <div className="grid grid-cols-2 gap-3 mb-4">
                   <div>
-                    <p className="text-xs text-slate-500">Valuation</p>
+                    <p className="text-xs text-slate-500">{t('company.valuation')}</p>
                     <p className="font-semibold text-slate-900">{company.valuation}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-slate-500">Founded</p>
+                    <p className="text-xs text-slate-500">{t('company.founded')}</p>
                     <p className="font-semibold text-slate-900">{company.foundedYear}</p>
                   </div>
                   <div className="col-span-2">
-                    <p className="text-xs text-slate-500">Headquarters</p>
+                    <p className="text-xs text-slate-500">{t('company.headquarters')}</p>
                     <p className="font-semibold text-slate-900">{company.headquarters}</p>
                   </div>
                 </div>

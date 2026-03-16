@@ -4,8 +4,10 @@ import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useLang } from '@/contexts/LangContext';
 
 export default function LoginPage() {
+  const { t } = useLang();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -29,13 +31,13 @@ export default function LoginPage() {
               <span className="text-3xl">🚀</span>
             </div>
             <h1 className="text-3xl font-bold text-white mb-2">VentureFlow</h1>
-            <p className="text-blue-200">FA Backend Management</p>
+            <p className="text-blue-200">{t('login.title')}</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-blue-100 mb-2">
-                Email
+                {t('login.email')}
               </label>
               <input
                 id="email"
@@ -51,7 +53,7 @@ export default function LoginPage() {
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-blue-100 mb-2">
-                Password
+                {t('login.password')}
               </label>
               <input
                 id="password"
@@ -59,7 +61,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-blue-300/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                placeholder="admin123"
+                placeholder="••••••••"
                 required
                 disabled={isLoading}
               />
@@ -74,20 +76,13 @@ export default function LoginPage() {
                   : 'bg-blue-600 hover:bg-blue-700 hover:shadow-lg'
               } text-white`}
             >
-              {isLoading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  Signing in...
-                </span>
-              ) : (
-                'Sign In'
-              )}
+              {isLoading ? t('login.signingIn') : t('login.signIn')}
             </button>
           </form>
 
           <div className="mt-6 pt-6 border-t border-white/10">
             <div className="bg-white/5 rounded-lg p-4">
-              <p className="text-xs text-blue-300/70 text-center mb-2">Demo Credentials:</p>
+              <p className="text-xs text-blue-300/70 text-center mb-2">{t('login.demoCredentials')}</p>
               <div className="bg-black/20 rounded p-2 text-center">
                 <code className="text-blue-200 text-sm">admin@ventureflow.com</code>
                 <br />
@@ -101,7 +96,7 @@ export default function LoginPage() {
               href="/user/login"
               className="block w-full py-3 text-center bg-white/10 text-white font-semibold rounded-lg hover:bg-white/20 transition-colors border border-white/20"
             >
-              👤 Investor Login →
+              {t('login.investorLink')}
             </Link>
           </div>
         </div>
