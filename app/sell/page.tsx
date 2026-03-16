@@ -3,8 +3,10 @@
 import React, { useState } from 'react';
 import BuyerLayout from '@/components/BuyerLayout';
 import Link from 'next/link';
+import { useLang } from '@/contexts/LangContext';
 
 export default function SellSharesPage() {
+  const { t } = useLang();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     // Asset Info
@@ -40,10 +42,10 @@ export default function SellSharesPage() {
       <section className="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-            Sell Your Shares
+            {t('sell.title')}
           </h1>
           <p className="text-blue-100 text-lg">
-            List your ByteDance equity or other pre-IPO shares on our platform
+            {t('sell.subtitle')}
           </p>
         </div>
       </section>
