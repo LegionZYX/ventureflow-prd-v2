@@ -15,7 +15,7 @@ const translations = {
     // Navigation
     'nav.home': 'Home',
     'nav.opportunities': 'Opportunities',
-    'nav.sell': 'Sell Shares',
+    'nav.sell': 'Intent Registry',
     'nav.about': 'About',
     'nav.contact': 'Contact',
     'nav.login': 'Log in',
@@ -366,7 +366,7 @@ const translations = {
     // Navigation
     'nav.home': '首页',
     'nav.opportunities': '投资机会',
-    'nav.sell': '出售股份',
+    'nav.sell': '意向登记',
     'nav.about': '关于我们',
     'nav.contact': '联系我们',
     'nav.login': '登录',
