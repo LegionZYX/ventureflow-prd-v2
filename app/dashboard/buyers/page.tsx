@@ -7,12 +7,12 @@ import DashboardLayout from '@/components/DashboardLayout';
 
 // Mock data for buyers
 const mockBuyers = [
-  { id: 1, name: 'BlueChip Capital', type: 'Institution', kyc: 'Approved', pof: 'Verified', email: 'contact@bluechip.com', date: '2026-02-15', aum: '$500M+', interest: 'Large Blocks' },
-  { id: 2, name: 'Pacific Wealth FO', type: 'Family Office', kyc: 'Approved', pof: 'Verified', email: 'info@pacificwealth.com', date: '2026-02-18', aum: '$200M+', interest: 'Growth Stage' },
-  { id: 3, name: 'Li Ming', type: 'Individual', kyc: 'Pending', pof: 'Pending', email: 'liming@email.com', date: '2026-02-25', aum: '$15M', interest: 'Pre-IPO' },
-  { id: 4, name: 'Zhang Broker Ltd', type: 'Broker', kyc: 'Approved', pof: 'Verified', email: 'deal@zhangbroker.com', date: '2026-02-20', aum: 'N/A', interest: 'All Deals' },
-  { id: 5, name: 'Sarah Chen', type: 'Individual', kyc: 'Approved', pof: 'Verified', email: 'sarah.chen@email.com', date: '2026-02-22', aum: '$50M', interest: 'Tech Sector' },
-  { id: 6, name: 'Horizon Ventures', type: 'VC Fund', kyc: 'Approved', pof: 'Verified', email: 'invest@horizonvc.com', date: '2026-02-10', aum: '$1.2B', interest: 'Series B+' },
+  { id: 1, name: 'CITIC Hong Kong', type: 'Institution', kyc: 'Approved', pof: 'Verified', email: 'citic@example.com', date: '2026-02-15', aum: '$200M', interest: 'Large Blocks' },
+  { id: 2, name: 'Justin@Antalpha', type: 'Institution', kyc: 'Approved', pof: 'Verified', email: 'justin@antalpha.com', date: '2026-02-18', aum: '$100M', interest: 'Growth Stage' },
+  { id: 3, name: 'Li Ming', type: 'Individual', kyc: 'Approved', pof: 'Verified', email: 'liming@example.com', date: '2026-02-25', aum: '$100M', interest: 'Pre-IPO' },
+  { id: 4, name: 'Ny', type: 'Individual', kyc: 'Pending', pof: 'Pending', email: 'ny@example.com', date: '2026-02-26', aum: '$150M', interest: 'Tech Sector' },
+  { id: 5, name: 'FCS Family Office', type: 'Family Office', kyc: 'Approved', pof: 'Verified', email: 'fcs@example.com', date: '2026-02-20', aum: '$50M', interest: 'Family Office' },
+  { id: 6, name: 'K Broker', type: 'Broker', kyc: 'Approved', pof: 'Verified', email: 'kbroker@example.com', date: '2026-02-22', aum: '$700M', interest: 'All Deals' },
 ];
 
 // AI Analysis data
