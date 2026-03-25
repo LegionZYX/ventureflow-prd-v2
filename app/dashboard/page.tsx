@@ -391,7 +391,9 @@ export default function FAHubPage() {
                       </span>
                     </div>
                     <div className="space-y-2">
-                      {matchedDeals.map(({ deal, score }) => (
+                      {matchedDeals.map((item: any) => {
+                        const { deal, score } = item;
+                        return (
                         <div key={deal.id} className="flex items-center justify-between bg-slate-50 rounded-lg p-3">
                           <div>
                             <p className="font-medium text-slate-900">{deal.company} - {deal.type}</p>
@@ -411,7 +413,8 @@ export default function FAHubPage() {
                             <span className="font-bold text-slate-900 w-12 text-right">{score}分</span>
                           </div>
                         </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 ))}
