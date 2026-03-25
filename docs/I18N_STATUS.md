@@ -66,11 +66,13 @@
 | Opportunities | 15+ | ✅ 完整 |
 | KYC | 18 | ✅ 完整 |
 | Sell | 18 | ✅ 完整 |
-| Login | 10 | ⚠️ 部分页面未使用 |
-| Dashboard | 40+ | ❌ FA 后台未使用 |
-| Buyer | 25+ | ❌ 买家门户未使用 |
+| Login | 10 | ✅ 完整 |
+| Dashboard | 40+ | ✅ 完整 |
+| Buyer Portal | 40+ | ✅ 完整 |
+| FA Hub | 35+ | ✅ 完整 |
+| Intent Registry | 20+ | ✅ 完整 |
 
-**总计**: 200+ 翻译键值
+**总计**: 350+ 翻译键值
 
 ---
 
