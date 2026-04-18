@@ -10,7 +10,8 @@ export type BidStatus =
   | 'MATCHED'
   | 'NEGOTIATING'
   | 'DEAL_CREATED'
-  | 'EXPIRED';
+  | 'EXPIRED'
+  | 'WITHDRAWN';
 export type AskStatus =
   | 'DRAFT'
   | 'SUBMITTED'
@@ -75,8 +76,13 @@ export interface AskOrder {
   tradeMode: TradeMode;
   shareClass: string;
   quantityLabel: string;
+  remainingQuantityLabel?: string;
   askPriceLabel: string;
   validityLabel: string;
+  expiresAt?: string;
+  reconfirmedAt?: string;
+  withdrawnAt?: string;
+  lifecycleNote?: string;
   transferRestrictions: string;
   ownershipStatus: VerificationStatus;
   privacyLevel: 'PUBLIC_ANONYMOUS' | 'CONTROLLED_DISCLOSURE';
@@ -92,7 +98,11 @@ export interface BidOrder {
   shareClass: string;
   bidPriceLabel: string;
   quantityLabel: string;
+  remainingQuantityLabel?: string;
   validUntil: string;
+  reconfirmedAt?: string;
+  withdrawnAt?: string;
+  lifecycleNote?: string;
   accreditedInvestor: boolean;
   conditions: string[];
   status: BidStatus;
@@ -190,6 +200,10 @@ export interface PlatformMandateAgreement {
   agreementType: 'BUYER_MANDATE' | 'SELLER_MANDATE' | 'PLATFORM_FEE_AGREEMENT';
   status: 'DRAFT' | 'PENDING_SIGNATURE' | 'SIGNED' | 'ACTIVE' | 'COMPLETED';
   signedDate: string;
+  signingMethod: 'E_SIGN' | 'PAPER_WITNESSED';
+  witnessType?: 'LAWYER' | 'NOTARY';
+  witnessLawFirm?: string;
+  certificationStatus?: 'PENDING' | 'VERIFIED';
 }
 
 export interface ReferralRewardRecord {
@@ -294,6 +308,54 @@ export interface DashboardTask {
   relatedEntity: 'KYC' | 'ASK' | 'DEAL' | 'ESCROW' | 'APPROVAL';
 }
 
+export interface DocumentReviewRecord {
+  id: string;
+  entityType: 'BUYER_KYC' | 'SELLER_KYC' | 'ASK_OWNERSHIP' | 'DEAL_LEGAL';
+  entityId: string;
+  companyName: string;
+  owner: string;
+  requiredDocuments: string[];
+  missingDocuments: string[];
+  status: 'PENDING' | 'NEEDS_MORE_INFO' | 'APPROVED';
+  lastUpdated: string;
+}
+
+export interface SellerDisclosureRecord {
+  id: string;
+  dealId: string;
+  companyName: string;
+  stage: DisclosureStage;
+  accessRole: 'BUYER' | 'FA' | 'LEGAL' | 'FINANCE';
+  requestReason: string;
+  approvedBy: string;
+  status: 'REQUESTED' | 'APPROVED' | 'RELEASED';
+  auditNote: string;
+}
+
+export interface SettlementStatement {
+  id: string;
+  dealId: string;
+  companyName: string;
+  sellerAlias: string;
+  grossAmountLabel: string;
+  platformFeeLabel: string;
+  legalFeeLabel: string;
+  netProceedsLabel: string;
+  status: 'DRAFT' | 'ISSUED' | 'CONFIRMED' | 'SETTLED';
+}
+
+export interface SellerPayoutRecord {
+  id: string;
+  statementId: string;
+  dealId: string;
+  companyName: string;
+  sellerAlias: string;
+  destinationLabel: string;
+  amountLabel: string;
+  status: 'PENDING_APPROVAL' | 'READY_TO_PAY' | 'PAID' | 'RECONCILED';
+  payoutEvidenceReady: boolean;
+}
+
 export interface TradingWorkspace {
   participants: ParticipantProfile[];
   buyerLeads: BuyerLead[];
@@ -314,6 +376,10 @@ export interface TradingWorkspace {
   transferApprovals: TransferApproval[];
   escrowRecords: EscrowRecord[];
   dashboardTasks: DashboardTask[];
+  documentReviewRecords: DocumentReviewRecord[];
+  sellerDisclosureRecords: SellerDisclosureRecord[];
+  settlementStatements: SettlementStatement[];
+  sellerPayoutRecords: SellerPayoutRecord[];
 }
 
 export const dealStages: DealStage[] = [
@@ -340,6 +406,10 @@ export const dealRecords = seedTradingWorkspace.dealRecords;
 export const faRecommendationLeads = seedTradingWorkspace.faRecommendationLeads;
 export const platformMandateAgreements = seedTradingWorkspace.platformMandateAgreements;
 export const referralRewardRecords = seedTradingWorkspace.referralRewardRecords;
+export const documentReviewRecords = seedTradingWorkspace.documentReviewRecords;
+export const sellerDisclosureRecords = seedTradingWorkspace.sellerDisclosureRecords;
+export const settlementStatements = seedTradingWorkspace.settlementStatements;
+export const sellerPayoutRecords = seedTradingWorkspace.sellerPayoutRecords;
 
 export function createSeedTradingWorkspace(): TradingWorkspace {
   return {
@@ -456,8 +526,11 @@ export function createSeedTradingWorkspace(): TradingWorkspace {
         tradeMode: 'L2',
         shareClass: 'Series H Common',
         quantityLabel: '300k shares',
+        remainingQuantityLabel: '180k shares',
         askPriceLabel: '$162 - $168',
         validityLabel: 'Valid for 30 days',
+        expiresAt: '2026-05-06',
+        reconfirmedAt: '2026-04-16',
         transferRestrictions: 'ROFR review required',
         ownershipStatus: 'VERIFIED',
         privacyLevel: 'PUBLIC_ANONYMOUS',
@@ -472,8 +545,10 @@ export function createSeedTradingWorkspace(): TradingWorkspace {
         tradeMode: 'DIRECT',
         shareClass: 'Employee Options',
         quantityLabel: '80k options',
+        remainingQuantityLabel: '60k options',
         askPriceLabel: '$138 - $145',
         validityLabel: 'Valid for 14 days',
+        expiresAt: '2026-04-28',
         transferRestrictions: 'Issuer consent required',
         ownershipStatus: 'VERIFIED',
         privacyLevel: 'CONTROLLED_DISCLOSURE',
@@ -488,8 +563,10 @@ export function createSeedTradingWorkspace(): TradingWorkspace {
         tradeMode: 'L1',
         shareClass: 'Preferred Subscription',
         quantityLabel: '$10M allocation',
+        remainingQuantityLabel: '$10M allocation',
         askPriceLabel: 'At issuance terms',
         validityLabel: 'Window closes in 10 days',
+        expiresAt: '2026-04-26',
         transferRestrictions: 'Issuer subscription memo',
         ownershipStatus: 'PENDING',
         privacyLevel: 'PUBLIC_ANONYMOUS',
@@ -506,7 +583,9 @@ export function createSeedTradingWorkspace(): TradingWorkspace {
         shareClass: 'Series H Common',
         bidPriceLabel: '$165',
         quantityLabel: '250k shares',
+        remainingQuantityLabel: '180k shares',
         validUntil: '2026-05-10',
+        reconfirmedAt: '2026-04-17',
         accreditedInvestor: true,
         conditions: ['NDA signed', 'Data room access', 'Escrow in HKD'],
         status: 'MATCHED',
@@ -520,6 +599,7 @@ export function createSeedTradingWorkspace(): TradingWorkspace {
         shareClass: 'Employee Options',
         bidPriceLabel: '$142',
         quantityLabel: '60k options',
+        remainingQuantityLabel: '60k options',
         validUntil: '2026-05-01',
         accreditedInvestor: true,
         conditions: ['Issuer approval', 'FA-led negotiation'],
@@ -534,6 +614,7 @@ export function createSeedTradingWorkspace(): TradingWorkspace {
         shareClass: 'Preferred Subscription',
         bidPriceLabel: '$2M ticket',
         quantityLabel: '$2M subscription',
+        remainingQuantityLabel: '$2M subscription',
         validUntil: '2026-05-15',
         accreditedInvestor: false,
         conditions: ['KYC approval pending'],
@@ -703,6 +784,8 @@ export function createSeedTradingWorkspace(): TradingWorkspace {
         agreementType: 'BUYER_MANDATE',
         status: 'SIGNED',
         signedDate: '2026-04-03',
+        signingMethod: 'E_SIGN',
+        certificationStatus: 'VERIFIED',
       },
       {
         id: 'agreement-2',
@@ -714,6 +797,10 @@ export function createSeedTradingWorkspace(): TradingWorkspace {
         agreementType: 'SELLER_MANDATE',
         status: 'ACTIVE',
         signedDate: '2026-03-28',
+        signingMethod: 'PAPER_WITNESSED',
+        witnessType: 'LAWYER',
+        witnessLawFirm: 'Han Kun Law Offices',
+        certificationStatus: 'VERIFIED',
       },
       {
         id: 'agreement-3',
@@ -726,6 +813,10 @@ export function createSeedTradingWorkspace(): TradingWorkspace {
         agreementType: 'PLATFORM_FEE_AGREEMENT',
         status: 'PENDING_SIGNATURE',
         signedDate: '2026-04-15',
+        signingMethod: 'PAPER_WITNESSED',
+        witnessType: 'LAWYER',
+        witnessLawFirm: 'Maples Asia',
+        certificationStatus: 'PENDING',
       },
       {
         id: 'agreement-4',
@@ -737,6 +828,8 @@ export function createSeedTradingWorkspace(): TradingWorkspace {
         agreementType: 'SELLER_MANDATE',
         status: 'SIGNED',
         signedDate: '2026-04-11',
+        signingMethod: 'E_SIGN',
+        certificationStatus: 'VERIFIED',
       },
     ],
     referralRewardRecords: [
@@ -953,6 +1046,176 @@ export function createSeedTradingWorkspace(): TradingWorkspace {
         relatedEntity: 'ESCROW',
       },
     ],
+    documentReviewRecords: [
+      {
+        id: 'doc-1',
+        entityType: 'BUYER_KYC',
+        entityId: 'bid-3',
+        companyName: 'SpaceX',
+        owner: 'Compliance',
+        requiredDocuments: ['Accredited investor proof', 'Source of funds memo', 'Bank account letter'],
+        missingDocuments: ['Accredited investor proof'],
+        status: 'NEEDS_MORE_INFO',
+        lastUpdated: '2026-04-18',
+      },
+      {
+        id: 'doc-2',
+        entityType: 'ASK_OWNERSHIP',
+        entityId: 'ask-1',
+        companyName: 'ByteDance',
+        owner: 'Platform legal',
+        requiredDocuments: ['Stock certificate', 'Transfer restriction memo', 'Seller identity pack'],
+        missingDocuments: [],
+        status: 'APPROVED',
+        lastUpdated: '2026-04-16',
+      },
+      {
+        id: 'doc-3',
+        entityType: 'DEAL_LEGAL',
+        entityId: 'deal-1',
+        companyName: 'ByteDance',
+        owner: 'External counsel',
+        requiredDocuments: ['SPA execution package', 'ROFR notice', 'Escrow instruction letter'],
+        missingDocuments: ['Escrow instruction letter'],
+        status: 'PENDING',
+        lastUpdated: '2026-04-18',
+      },
+    ],
+    sellerDisclosureRecords: [
+      {
+        id: 'disclosure-1',
+        dealId: 'deal-1',
+        companyName: 'ByteDance',
+        stage: 'NEGOTIATION_SUMMARY',
+        accessRole: 'BUYER',
+        requestReason: 'Buyer requested cap table and seller employment status summary.',
+        approvedBy: 'Platform legal',
+        status: 'APPROVED',
+        auditNote: 'Buyer can see redacted cap table only until SPA execution.',
+      },
+      {
+        id: 'disclosure-2',
+        dealId: 'deal-2',
+        companyName: 'ByteDance',
+        stage: 'LEGAL_DISCLOSURE',
+        accessRole: 'LEGAL',
+        requestReason: 'Counsel needs full seller identity pack to verify transfer package.',
+        approvedBy: 'General counsel',
+        status: 'RELEASED',
+        auditNote: 'Full seller identity released to approved legal team only.',
+      },
+    ],
+    settlementStatements: [
+      {
+        id: 'statement-1',
+        dealId: 'deal-1',
+        companyName: 'ByteDance',
+        sellerAlias: 'Seller-BD-01',
+        grossAmountLabel: '$41.2M',
+        platformFeeLabel: '$824K',
+        legalFeeLabel: '$90K',
+        netProceedsLabel: '$40.286M',
+        status: 'ISSUED',
+      },
+      {
+        id: 'statement-2',
+        dealId: 'deal-2',
+        companyName: 'ByteDance',
+        sellerAlias: 'Seller-BD-GP',
+        grossAmountLabel: '$8.5M',
+        platformFeeLabel: '$170K',
+        legalFeeLabel: '$35K',
+        netProceedsLabel: '$8.295M',
+        status: 'CONFIRMED',
+      },
+    ],
+    sellerPayoutRecords: [
+      {
+        id: 'payout-1',
+        statementId: 'statement-1',
+        dealId: 'deal-1',
+        companyName: 'ByteDance',
+        sellerAlias: 'Seller-BD-01',
+        destinationLabel: 'HSBC seller settlement account',
+        amountLabel: '$40.286M',
+        status: 'READY_TO_PAY',
+        payoutEvidenceReady: false,
+      },
+      {
+        id: 'payout-2',
+        statementId: 'statement-2',
+        dealId: 'deal-2',
+        companyName: 'ByteDance',
+        sellerAlias: 'Seller-BD-GP',
+        destinationLabel: 'DBS GP distribution account',
+        amountLabel: '$8.295M',
+        status: 'PAID',
+        payoutEvidenceReady: true,
+      },
+    ],
+  };
+}
+
+function mergeSeedById<T extends { id: string }>(items: T[] | undefined, seedItems: T[]) {
+  if (!Array.isArray(items)) {
+    return seedItems;
+  }
+
+  const seedMap = new Map(seedItems.map((item) => [item.id, item]));
+  return items.map((item) => ({ ...(seedMap.get(item.id) ?? {}), ...item })) as T[];
+}
+
+export function normalizeTradingWorkspace(workspace: Partial<TradingWorkspace>): TradingWorkspace {
+  const seed = createSeedTradingWorkspace();
+
+  return {
+    participants: mergeSeedById(workspace.participants, seed.participants),
+    buyerLeads: mergeSeedById(workspace.buyerLeads, seed.buyerLeads),
+    askOrders: mergeSeedById(workspace.askOrders, seed.askOrders),
+    bidOrders: mergeSeedById(workspace.bidOrders, seed.bidOrders),
+    listingRecords: mergeSeedById(workspace.listingRecords, seed.listingRecords),
+    orderMatches: mergeSeedById(workspace.orderMatches, seed.orderMatches),
+    faTeams: mergeSeedById(workspace.faTeams, seed.faTeams),
+    dealRecords: mergeSeedById(workspace.dealRecords, seed.dealRecords),
+    faRecommendationLeads: mergeSeedById(
+      workspace.faRecommendationLeads,
+      seed.faRecommendationLeads,
+    ),
+    platformMandateAgreements: mergeSeedById(
+      workspace.platformMandateAgreements,
+      seed.platformMandateAgreements,
+    ),
+    referralRewardRecords: mergeSeedById(
+      workspace.referralRewardRecords,
+      seed.referralRewardRecords,
+    ),
+    faOnboardingApplications: mergeSeedById(
+      workspace.faOnboardingApplications,
+      seed.faOnboardingApplications,
+    ),
+    companyRules: mergeSeedById(workspace.companyRules, seed.companyRules),
+    marketSignals: mergeSeedById(workspace.marketSignals, seed.marketSignals),
+    orderBookEntries: mergeSeedById(workspace.orderBookEntries, seed.orderBookEntries),
+    negotiationRecords: mergeSeedById(workspace.negotiationRecords, seed.negotiationRecords),
+    transferApprovals: mergeSeedById(workspace.transferApprovals, seed.transferApprovals),
+    escrowRecords: mergeSeedById(workspace.escrowRecords, seed.escrowRecords),
+    dashboardTasks: mergeSeedById(workspace.dashboardTasks, seed.dashboardTasks),
+    documentReviewRecords: mergeSeedById(
+      workspace.documentReviewRecords,
+      seed.documentReviewRecords,
+    ),
+    sellerDisclosureRecords: mergeSeedById(
+      workspace.sellerDisclosureRecords,
+      seed.sellerDisclosureRecords,
+    ),
+    settlementStatements: mergeSeedById(
+      workspace.settlementStatements,
+      seed.settlementStatements,
+    ),
+    sellerPayoutRecords: mergeSeedById(
+      workspace.sellerPayoutRecords,
+      seed.sellerPayoutRecords,
+    ),
   };
 }
 

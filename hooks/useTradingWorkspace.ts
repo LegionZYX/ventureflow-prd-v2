@@ -10,7 +10,15 @@ type TradingAction =
   | 'advanceDeal'
   | 'advanceFAOnboarding'
   | 'advanceTransferApproval'
-  | 'advanceEscrow';
+  | 'advanceEscrow'
+  | 'withdrawBid'
+  | 'reconfirmBid'
+  | 'withdrawAsk'
+  | 'reconfirmAsk'
+  | 'advanceDocumentReview'
+  | 'advanceSellerDisclosure'
+  | 'advanceSettlement'
+  | 'advanceSellerPayout';
 
 interface UseTradingWorkspaceResult {
   error: string | null;

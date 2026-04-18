@@ -71,6 +71,8 @@ export default function AgreementsPage() {
                   <HeaderCell>Principal</HeaderCell>
                   <HeaderCell>Principal Type</HeaderCell>
                   <HeaderCell>Contracting Party</HeaderCell>
+                  <HeaderCell>Signing Method</HeaderCell>
+                  <HeaderCell>Witness / Certification</HeaderCell>
                   <HeaderCell>Deal</HeaderCell>
                   <HeaderCell>Referral Link</HeaderCell>
                   <HeaderCell>Status</HeaderCell>
@@ -85,6 +87,14 @@ export default function AgreementsPage() {
                     <BodyCell>{agreement.principalName}</BodyCell>
                     <BodyCell>{agreement.principalType}</BodyCell>
                     <BodyCell>{agreement.contractWith}</BodyCell>
+                    <BodyCell>
+                      {agreement.signingMethod === 'E_SIGN' ? 'E-sign' : 'Paper witnessed'}
+                    </BodyCell>
+                    <BodyCell>
+                      {agreement.signingMethod === 'PAPER_WITNESSED'
+                        ? `${agreement.witnessType ?? 'Lawyer'} / ${agreement.witnessLawFirm ?? 'Pending counsel'}`
+                        : agreement.certificationStatus ?? 'Verified'}
+                    </BodyCell>
                     <BodyCell>{agreement.deal?.companyName ?? '-'}</BodyCell>
                     <BodyCell>
                       {agreement.relatedRecommendationId ?? 'Direct platform relationship'}

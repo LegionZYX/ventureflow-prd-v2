@@ -3,9 +3,13 @@
 import DashboardLayout from '@/components/DashboardLayout';
 import { useTradingWorkspace } from '@/hooks/useTradingWorkspace';
 import { getAskRegistry, getBidRegistry, getTradeModeLabel } from '@/lib/trading-v2';
+import {
+  canAdvanceDocumentReview,
+  getDocumentReviewActionLabel,
+} from '@/lib/trading-v2-workflow';
 
 export default function IntentRegistryPage() {
-  const { error, loading, workspace } = useTradingWorkspace();
+  const { error, isPending, loading, runAction, workspace } = useTradingWorkspace();
 
   if (loading || !workspace) {
     return (
@@ -55,6 +59,7 @@ export default function IntentRegistryPage() {
                   <HeaderCell>Qualified</HeaderCell>
                   <HeaderCell>Valid Until</HeaderCell>
                   <HeaderCell>Status</HeaderCell>
+                  <HeaderCell>Lifecycle</HeaderCell>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
@@ -70,6 +75,34 @@ export default function IntentRegistryPage() {
                     <BodyCell>{bid.validUntil}</BodyCell>
                     <BodyCell>
                       <StatusPill>{bid.status}</StatusPill>
+                    </BodyCell>
+                    <BodyCell>
+                      <div className="flex flex-wrap gap-2">
+                        {bid.status === 'WITHDRAWN' || bid.status === 'EXPIRED' ? (
+                          <ActionButton
+                            onClick={() => runAction('reconfirmBid', bid.id)}
+                            disabled={isPending}
+                            tone="emerald"
+                          >
+                            Reconfirm
+                          </ActionButton>
+                        ) : (
+                          <ActionButton
+                            onClick={() => runAction('withdrawBid', bid.id)}
+                            disabled={isPending}
+                            tone="slate"
+                          >
+                            Withdraw
+                          </ActionButton>
+                        )}
+                        <span className="text-xs text-slate-400">
+                          {bid.reconfirmedAt
+                            ? `Reconfirmed ${bid.reconfirmedAt}`
+                            : bid.withdrawnAt
+                              ? `Withdrawn ${bid.withdrawnAt}`
+                              : bid.remainingQuantityLabel ?? 'Live'}
+                        </span>
+                      </div>
                     </BodyCell>
                   </tr>
                 ))}
@@ -95,6 +128,7 @@ export default function IntentRegistryPage() {
                   <HeaderCell>Ownership</HeaderCell>
                   <HeaderCell>Restriction</HeaderCell>
                   <HeaderCell>Status</HeaderCell>
+                  <HeaderCell>Lifecycle</HeaderCell>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
@@ -110,6 +144,34 @@ export default function IntentRegistryPage() {
                     <BodyCell>{ask.transferRestrictions}</BodyCell>
                     <BodyCell>
                       <StatusPill>{ask.status}</StatusPill>
+                    </BodyCell>
+                    <BodyCell>
+                      <div className="flex flex-wrap gap-2">
+                        {ask.status === 'WITHDRAWN' ? (
+                          <ActionButton
+                            onClick={() => runAction('reconfirmAsk', ask.id)}
+                            disabled={isPending}
+                            tone="emerald"
+                          >
+                            Re-open
+                          </ActionButton>
+                        ) : (
+                          <ActionButton
+                            onClick={() => runAction('withdrawAsk', ask.id)}
+                            disabled={isPending}
+                            tone="slate"
+                          >
+                            Withdraw
+                          </ActionButton>
+                        )}
+                        <span className="text-xs text-slate-400">
+                          {ask.reconfirmedAt
+                            ? `Reconfirmed ${ask.reconfirmedAt}`
+                            : ask.withdrawnAt
+                              ? `Withdrawn ${ask.withdrawnAt}`
+                              : ask.remainingQuantityLabel ?? 'Live'}
+                        </span>
+                      </div>
                     </BodyCell>
                   </tr>
                 ))}
@@ -170,8 +232,70 @@ export default function IntentRegistryPage() {
             </div>
           </RegistrySection>
         </div>
+
+        <RegistrySection
+          title="Document Review Queue"
+          description="KYC, seller ownership, and deal legal packages now share one persisted review queue with补件 and approval actions."
+        >
+          <div className="grid gap-4 lg:grid-cols-3">
+            {workspace.documentReviewRecords.map((record) => (
+              <div key={record.id} className="rounded-2xl border border-slate-200 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="font-semibold text-slate-900">{record.companyName}</p>
+                    <p className="text-sm text-slate-500">
+                      {record.entityType} / {record.owner}
+                    </p>
+                  </div>
+                  <StatusPill>{record.status}</StatusPill>
+                </div>
+                <p className="mt-3 text-sm text-slate-600">
+                  Missing: {record.missingDocuments.length > 0 ? record.missingDocuments.join(', ') : 'None'}
+                </p>
+                <p className="mt-1 text-xs text-slate-400">Updated {record.lastUpdated}</p>
+                <div className="mt-4 flex justify-end">
+                  <ActionButton
+                    onClick={() => runAction('advanceDocumentReview', record.id)}
+                    disabled={!canAdvanceDocumentReview(record.status) || isPending}
+                    tone="blue"
+                  >
+                    {getDocumentReviewActionLabel(record.status)}
+                  </ActionButton>
+                </div>
+              </div>
+            ))}
+          </div>
+        </RegistrySection>
       </div>
     </DashboardLayout>
+  );
+}
+
+function ActionButton({
+  children,
+  disabled,
+  onClick,
+  tone,
+}: {
+  children: React.ReactNode;
+  disabled: boolean;
+  onClick: () => void;
+  tone: 'blue' | 'emerald' | 'slate';
+}) {
+  const styles = {
+    blue: 'bg-blue-600 hover:bg-blue-700',
+    emerald: 'bg-emerald-600 hover:bg-emerald-700',
+    slate: 'bg-slate-900 hover:bg-slate-800',
+  };
+
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`rounded-lg px-3 py-2 text-xs font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-300 ${styles[tone]}`}
+    >
+      {children}
+    </button>
   );
 }
 
