@@ -50,6 +50,11 @@ The action layer now supports persisted progression for:
 - transfer approvals
 - escrow flow
 
+### 3.1 Contract execution rule update
+
+- e-sign remains available, but is optional instead of mandatory
+- paper signing is acceptable when the signed package includes lawyer witnessing or equivalent legal certification
+
 ### 4. Dashboard pages moved to persisted data
 
 The following pages now use the shared API-backed workspace instead of local-only `useState` snapshots:
@@ -72,7 +77,7 @@ These are still important, but no longer blockers for a realistic V2 demo:
 - real document upload and verification workflow
 - explicit bid edit / withdraw / reconfirm actions
 - partial fills and richer match console
-- contract templating and e-sign callbacks
+- contract templating and signing-method tracking, including lawyer-witnessed paper packs
 
 ### P1 next
 

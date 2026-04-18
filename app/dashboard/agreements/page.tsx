@@ -110,7 +110,7 @@ export default function AgreementsPage() {
 
         <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="text-xl font-bold text-slate-900">Contract Logic</h2>
-          <div className="mt-5 grid gap-4 md:grid-cols-3">
+          <div className="mt-5 grid gap-4 md:grid-cols-4">
             <RuleCard
               title="Buyer Side"
               body="Registered buyers and bound prospects both sign with the platform once they enter formal execution."
@@ -122,6 +122,10 @@ export default function AgreementsPage() {
             <RuleCard
               title="FA Referral"
               body="FA recommendation records control attribution and rewards, not the legal counterparty of the contract."
+            />
+            <RuleCard
+              title="Signing Method"
+              body="E-sign is optional. Paper execution is allowed, but the package must include lawyer witnessing or equivalent legal certification."
             />
           </div>
         </section>

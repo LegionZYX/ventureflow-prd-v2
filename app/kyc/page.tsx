@@ -1,13 +1,48 @@
 'use client';
 
 import React, { useState } from 'react';
-import BuyerLayout from '@/components/BuyerLayout';
 import Link from 'next/link';
+import BuyerLayout from '@/components/BuyerLayout';
 import { useLang } from '@/contexts/LangContext';
+
+const roleDocumentMap = {
+  BUYER: [
+    'Government ID or passport',
+    'Proof of address within 3 months',
+    'Accredited investor evidence',
+    'Source of funds declaration',
+    'Bank account for escrow or settlement',
+  ],
+  SELLER: [
+    'Government ID or passport',
+    'Proof of address within 3 months',
+    'Stock certificate or equity platform proof',
+    'Grant, exercise, or acquisition agreement',
+    'Transfer restriction and ROFR disclosure',
+    'Receiving bank account for settlement',
+  ],
+  INSTITUTION: [
+    'Certificate of incorporation or registration',
+    'Company registration number and jurisdiction',
+    'Authorized signatory ID',
+    'Board resolution or authorization letter',
+    'UBO or control person details',
+    'Institutional accreditation evidence',
+  ],
+  FA: [
+    'FA license or qualification file',
+    'Service agreement with platform',
+    'Commission receiving bank account',
+    'Compliance training completion',
+  ],
+} as const;
+
+type RoleKey = keyof typeof roleDocumentMap;
 
 export default function KYCPage() {
   const { t } = useLang();
   const [step, setStep] = useState(1);
+  const [role, setRole] = useState<RoleKey>('BUYER');
   const [formData, setFormData] = useState({
     companyName: '',
     registrationNumber: '',
@@ -18,13 +53,12 @@ export default function KYCPage() {
     phone: '',
     investorType: '',
     aum: '',
-    documents: [] as string[],
   });
 
-  const handleNext = () => setStep(step + 1);
-  const handleBack = () => setStep(step - 1);
+  const handleNext = () => setStep((current) => current + 1);
+  const handleBack = () => setStep((current) => current - 1);
   const updateField = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((previous) => ({ ...previous, [field]: value }));
   };
 
   const steps = [
@@ -35,85 +69,98 @@ export default function KYCPage() {
     { num: 5, title: t('kyc.step5') },
   ];
 
+  const requiredDocs = roleDocumentMap[role];
+
   return (
     <BuyerLayout>
-      {/* Hero */}
       <section className="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-            {t('kyc.title')}
-          </h1>
-          <p className="text-blue-100 text-lg">
-            {t('kyc.subtitle')}
-          </p>
+        <div className="mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
+          <h1 className="mb-4 text-3xl font-bold text-white sm:text-4xl">{t('kyc.title')}</h1>
+          <p className="text-lg text-blue-100">{t('kyc.subtitle')}</p>
         </div>
       </section>
 
-      {/* Progress Steps */}
-      <section className="py-8 border-b border-slate-200">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="border-b border-slate-200 py-8">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between">
-            {steps.map((s, index) => (
-              <React.Fragment key={s.num}>
+            {steps.map((currentStep, index) => (
+              <React.Fragment key={currentStep.num}>
                 <div className="flex flex-col items-center">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
-                    step >= s.num 
-                      ? 'bg-blue-600 text-white' 
-                      : 'bg-slate-200 text-slate-500'
-                  }`}>
-                    {step > s.num ? '✓' : s.num}
+                  <div
+                    className={`flex h-10 w-10 items-center justify-center rounded-full font-bold ${
+                      step >= currentStep.num
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-slate-200 text-slate-500'
+                    }`}
+                  >
+                    {step > currentStep.num ? 'Done' : currentStep.num}
                   </div>
-                  <p className={`text-xs mt-2 hidden sm:block ${
-                    step >= s.num ? 'text-blue-600 font-medium' : 'text-slate-500'
-                  }`}>
-                    {s.title}
+                  <p
+                    className={`mt-2 hidden text-xs sm:block ${
+                      step >= currentStep.num ? 'font-medium text-blue-600' : 'text-slate-500'
+                    }`}
+                  >
+                    {currentStep.title}
                   </p>
                 </div>
-                {index < 4 && (
-                  <div className={`flex-1 h-1 mx-2 rounded ${
-                    step > s.num ? 'bg-blue-600' : 'bg-slate-200'
-                  }`} />
-                )}
+                {index < 4 ? (
+                  <div
+                    className={`mx-2 h-1 flex-1 rounded ${
+                      step > currentStep.num ? 'bg-blue-600' : 'bg-slate-200'
+                    }`}
+                  />
+                ) : null}
               </React.Fragment>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Form Steps */}
       <section className="py-12">
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8">
-            {/* Step 1 */}
-            {step === 1 && (
+        <div className="mx-auto grid max-w-5xl gap-8 px-4 sm:px-6 lg:grid-cols-[1.1fr_0.9fr] lg:px-8">
+          <div className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm">
+            {step === 1 ? (
               <div className="space-y-6">
                 <h2 className="text-xl font-bold text-slate-900">{t('kyc.step1')}</h2>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Company Name *</label>
+                  <label className="mb-2 block text-sm font-medium text-slate-700">Business Role *</label>
+                  <select
+                    value={role}
+                    onChange={(event) => setRole(event.target.value as RoleKey)}
+                    className="w-full rounded-lg border border-slate-300 px-4 py-3 focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="BUYER">Buyer / Investor</option>
+                    <option value="SELLER">Seller / Shareholder / GP</option>
+                    <option value="INSTITUTION">Institution / KYB</option>
+                    <option value="FA">FA / Advisor</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-700">Company Name *</label>
                   <input
                     type="text"
                     value={formData.companyName}
-                    onChange={(e) => updateField('companyName', e.target.value)}
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    onChange={(event) => updateField('companyName', event.target.value)}
+                    className="w-full rounded-lg border border-slate-300 px-4 py-3 focus:ring-2 focus:ring-blue-500"
                     placeholder="Your company name"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Registration Number *</label>
+                  <label className="mb-2 block text-sm font-medium text-slate-700">Registration Number *</label>
                   <input
                     type="text"
                     value={formData.registrationNumber}
-                    onChange={(e) => updateField('registrationNumber', e.target.value)}
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    onChange={(event) => updateField('registrationNumber', event.target.value)}
+                    className="w-full rounded-lg border border-slate-300 px-4 py-3 focus:ring-2 focus:ring-blue-500"
                     placeholder="Business registration number"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Country/Region *</label>
+                  <label className="mb-2 block text-sm font-medium text-slate-700">Country / Region *</label>
                   <select
                     value={formData.country}
-                    onChange={(e) => updateField('country', e.target.value)}
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    onChange={(event) => updateField('country', event.target.value)}
+                    className="w-full rounded-lg border border-slate-300 px-4 py-3 focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Select country</option>
                     <option value="HK">Hong Kong</option>
@@ -124,68 +171,75 @@ export default function KYCPage() {
                   </select>
                 </div>
                 <div className="flex gap-4 pt-4">
-                  <button onClick={handleNext} className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
-                    Next →
+                  <button
+                    onClick={handleNext}
+                    className="flex-1 rounded-lg bg-blue-600 px-6 py-3 font-medium text-white hover:bg-blue-700"
+                  >
+                    Next
                   </button>
                 </div>
               </div>
-            )}
+            ) : null}
 
-            {/* Step 2 */}
-            {step === 2 && (
+            {step === 2 ? (
               <div className="space-y-6">
                 <h2 className="text-xl font-bold text-slate-900">{t('kyc.step2')}</h2>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">{t('kyc.contactName')} *</label>
+                  <label className="mb-2 block text-sm font-medium text-slate-700">{t('kyc.contactName')} *</label>
                   <input
                     type="text"
                     value={formData.contactName}
-                    onChange={(e) => updateField('contactName', e.target.value)}
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    onChange={(event) => updateField('contactName', event.target.value)}
+                    className="w-full rounded-lg border border-slate-300 px-4 py-3 focus:ring-2 focus:ring-blue-500"
                     placeholder="Full name"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">{t('kyc.email')} *</label>
+                  <label className="mb-2 block text-sm font-medium text-slate-700">{t('kyc.email')} *</label>
                   <input
                     type="email"
                     value={formData.email}
-                    onChange={(e) => updateField('email', e.target.value)}
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    onChange={(event) => updateField('email', event.target.value)}
+                    className="w-full rounded-lg border border-slate-300 px-4 py-3 focus:ring-2 focus:ring-blue-500"
                     placeholder="email@company.com"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">{t('kyc.phone')} *</label>
+                  <label className="mb-2 block text-sm font-medium text-slate-700">{t('kyc.phone')} *</label>
                   <input
                     type="tel"
                     value={formData.phone}
-                    onChange={(e) => updateField('phone', e.target.value)}
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    onChange={(event) => updateField('phone', event.target.value)}
+                    className="w-full rounded-lg border border-slate-300 px-4 py-3 focus:ring-2 focus:ring-blue-500"
                     placeholder="+852 1234 5678"
                   />
                 </div>
                 <div className="flex gap-4 pt-4">
-                  <button onClick={handleBack} className="px-6 py-3 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 font-medium">
-                    ← Back
+                  <button
+                    onClick={handleBack}
+                    className="rounded-lg border border-slate-300 px-6 py-3 font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    Back
                   </button>
-                  <button onClick={handleNext} className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
-                    Next →
+                  <button
+                    onClick={handleNext}
+                    className="flex-1 rounded-lg bg-blue-600 px-6 py-3 font-medium text-white hover:bg-blue-700"
+                  >
+                    Next
                   </button>
                 </div>
               </div>
-            )}
+            ) : null}
 
-            {/* Step 3 */}
-            {step === 3 && (
+            {step === 3 ? (
               <div className="space-y-6">
                 <h2 className="text-xl font-bold text-slate-900">{t('kyc.step3')}</h2>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Investor Type *</label>
+                  <label className="mb-2 block text-sm font-medium text-slate-700">Investor Type *</label>
                   <select
                     value={formData.investorType}
-                    onChange={(e) => updateField('investorType', e.target.value)}
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    onChange={(event) => updateField('investorType', event.target.value)}
+                    className="w-full rounded-lg border border-slate-300 px-4 py-3 focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Select type</option>
                     <option value="individual">{t('kyc.individual')}</option>
@@ -193,11 +247,11 @@ export default function KYCPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">AUM (Assets Under Management) *</label>
+                  <label className="mb-2 block text-sm font-medium text-slate-700">AUM *</label>
                   <select
                     value={formData.aum}
-                    onChange={(e) => updateField('aum', e.target.value)}
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    onChange={(event) => updateField('aum', event.target.value)}
+                    className="w-full rounded-lg border border-slate-300 px-4 py-3 focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">Select range</option>
                     <option value="<1M">&lt; $1M</option>
@@ -206,93 +260,135 @@ export default function KYCPage() {
                     <option value=">50M">&gt; $50M</option>
                   </select>
                 </div>
+                <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+                  Forge-aligned note: buyers need accredited investor evidence, while sellers need ownership and transferability proof before listing can go live.
+                </div>
                 <div className="flex gap-4 pt-4">
-                  <button onClick={handleBack} className="px-6 py-3 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 font-medium">
-                    ← Back
+                  <button
+                    onClick={handleBack}
+                    className="rounded-lg border border-slate-300 px-6 py-3 font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    Back
                   </button>
-                  <button onClick={handleNext} className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
-                    Next →
+                  <button
+                    onClick={handleNext}
+                    className="flex-1 rounded-lg bg-blue-600 px-6 py-3 font-medium text-white hover:bg-blue-700"
+                  >
+                    Next
                   </button>
                 </div>
               </div>
-            )}
+            ) : null}
 
-            {/* Step 4 */}
-            {step === 4 && (
+            {step === 4 ? (
               <div className="space-y-6">
                 <h2 className="text-xl font-bold text-slate-900">{t('kyc.step4')}</h2>
+                <p className="text-sm text-slate-500">
+                  Required files now reflect the Forge reference more closely and vary by role.
+                </p>
                 <div className="space-y-3">
-                  <label className="flex items-start gap-3 p-4 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">
-                    <input type="checkbox" className="mt-1 w-4 h-4" />
-                    <div>
-                      <p className="font-medium text-slate-900">Proof of Accredited Investor Status</p>
-                      <p className="text-sm text-slate-500">Bank statement or financial institution letter</p>
-                    </div>
-                  </label>
-                  <label className="flex items-start gap-3 p-4 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">
-                    <input type="checkbox" className="mt-1 w-4 h-4" />
-                    <div>
-                      <p className="font-medium text-slate-900">Proof of Identity</p>
-                      <p className="text-sm text-slate-500">Passport or national ID card</p>
-                    </div>
-                  </label>
-                  <label className="flex items-start gap-3 p-4 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">
-                    <input type="checkbox" className="mt-1 w-4 h-4" />
-                    <div>
-                      <p className="font-medium text-slate-900">Proof of Address</p>
-                      <p className="text-sm text-slate-500">Utility bill or bank statement (within 3 months)</p>
-                    </div>
-                  </label>
+                  {requiredDocs.map((document) => (
+                    <label
+                      key={document}
+                      className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-200 p-4 hover:bg-slate-50"
+                    >
+                      <input type="checkbox" className="mt-1 h-4 w-4" />
+                      <div>
+                        <p className="font-medium text-slate-900">{document}</p>
+                        <p className="text-sm text-slate-500">
+                          {role === 'BUYER'
+                            ? 'Used for identity, AML, accredited-investor, and settlement readiness checks.'
+                            : null}
+                          {role === 'SELLER'
+                            ? 'Used for identity, ownership, transfer restriction, and payout readiness checks.'
+                            : null}
+                          {role === 'INSTITUTION'
+                            ? 'Used for KYB, authorization, UBO, and institutional qualification checks.'
+                            : null}
+                          {role === 'FA'
+                            ? 'Used for FA onboarding, compliance training, and payout setup.'
+                            : null}
+                        </p>
+                      </div>
+                    </label>
+                  ))}
                 </div>
                 <div className="flex gap-4 pt-4">
-                  <button onClick={handleBack} className="px-6 py-3 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 font-medium">
-                    ← Back
+                  <button
+                    onClick={handleBack}
+                    className="rounded-lg border border-slate-300 px-6 py-3 font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    Back
                   </button>
-                  <button onClick={handleNext} className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
-                    Next →
+                  <button
+                    onClick={handleNext}
+                    className="flex-1 rounded-lg bg-blue-600 px-6 py-3 font-medium text-white hover:bg-blue-700"
+                  >
+                    Next
                   </button>
                 </div>
               </div>
-            )}
+            ) : null}
 
-            {/* Step 5 */}
-            {step === 5 && (
+            {step === 5 ? (
               <div className="space-y-6">
                 <h2 className="text-xl font-bold text-slate-900">{t('kyc.step5')}</h2>
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
                   <p className="text-sm text-amber-800">
-                    <strong>Risk Warning:</strong> Investment in private equity involves significant risks including loss of principal. 
-                    Past performance does not guarantee future results. Please ensure you understand all risks before investing.
+                    <strong>Risk Warning:</strong> investment in private equity involves significant risks including loss of principal, transfer restrictions, and delayed liquidity.
                   </p>
                 </div>
-                <label className="flex items-start gap-3 p-4 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50">
-                  <input type="checkbox" className="mt-1 w-4 h-4" />
+                <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-200 p-4 hover:bg-slate-50">
+                  <input type="checkbox" className="mt-1 h-4 w-4" />
                   <div>
-                    <p className="font-medium text-slate-900">I have read and accept the Risk Disclosure Statement</p>
-                    <p className="text-sm text-slate-500">I understand the risks involved in private equity investment</p>
+                    <p className="font-medium text-slate-900">I accept the risk disclosure and data verification workflow</p>
+                    <p className="text-sm text-slate-500">
+                      This includes AML review, ownership review where relevant, and role-based document validation.
+                    </p>
                   </div>
                 </label>
                 <div className="flex gap-4 pt-4">
-                  <button onClick={handleBack} className="px-6 py-3 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 font-medium">
-                    ← Back
+                  <button
+                    onClick={handleBack}
+                    className="rounded-lg border border-slate-300 px-6 py-3 font-medium text-slate-700 hover:bg-slate-50"
+                  >
+                    Back
                   </button>
-                  <button 
+                  <button
                     onClick={() => alert(t('kyc.successDesc'))}
-                    className="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium"
+                    className="flex-1 rounded-lg bg-green-600 px-6 py-3 font-medium text-white hover:bg-green-700"
                   >
                     {t('kyc.submit')}
                   </button>
                 </div>
               </div>
-            )}
+            ) : null}
           </div>
 
-          {/* Help Section */}
-          <div className="mt-8 text-center">
-            <p className="text-slate-600 mb-2">Need assistance with verification?</p>
-            <Link href="/contact" className="text-blue-600 hover:underline font-medium">
-              Contact our support team →
-            </Link>
+          <div className="space-y-6">
+            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+              <h3 className="text-lg font-semibold text-slate-900">Forge Reference Summary</h3>
+              <ul className="mt-4 space-y-3 text-sm text-slate-600">
+                <li>Buyers must pass identity review and accredited investor validation before submitting bids.</li>
+                <li>Sellers must pass identity review and ownership proof before an ask can become a listing.</li>
+                <li>Institutions need KYB, authorized signatory proof, and UBO details.</li>
+                <li>FA needs qualification, bank verification, and training before taking platform work.</li>
+              </ul>
+            </div>
+
+            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+              <h3 className="text-lg font-semibold text-slate-900">Execution Rule</h3>
+              <p className="mt-3 text-sm text-slate-600">
+                Electronic signature can be used, but it is no longer mandatory. Paper signing is acceptable if the executed package includes lawyer witnessing or notarized legal certification.
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+              <p className="mb-2 text-slate-600">Need assistance with verification?</p>
+              <Link href="/contact" className="font-medium text-blue-600 hover:underline">
+                Contact our support team
+              </Link>
+            </div>
           </div>
         </div>
       </section>
