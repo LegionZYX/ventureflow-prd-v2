@@ -235,7 +235,7 @@ export default function IntentRegistryPage() {
 
         <RegistrySection
           title="Document Review Queue"
-          description="KYC, seller ownership, and deal legal packages now share one persisted review queue with补件 and approval actions."
+          description="KYC, seller ownership, and deal legal packages now share one persisted review queue with supplement requests and approval actions."
         >
           <div className="grid gap-4 lg:grid-cols-3">
             {workspace.documentReviewRecords.map((record) => (
