@@ -1,122 +1,144 @@
 'use client';
 
-import React from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
-
-const mockDeals = [
-  { id: 1, asset: '字节跳动 H 轮普通股', buyer: 'BlueChip Capital', seller: 'Founder A', price: '$165M', status: 'Negotiating', fee: '$2.5M', progress: 25 },
-  { id: 2, asset: '字节跳动员工期权包', buyer: 'Pacific Wealth FO', seller: 'Employee Pool', price: '$48M', status: 'Signed', fee: '$720K', progress: 50 },
-  { id: 3, asset: 'AI 视频公司 A 轮', buyer: 'Zhang Broker Ltd', seller: 'VideoAI Founder', price: '$85M', status: 'Closing', fee: '$1.28M', progress: 75 },
-  { id: 4, asset: '字节跳动 H 轮普通股', buyer: 'Sarah Chen', seller: 'Founder A', price: '$168M', status: 'Completed', fee: '$2.52M', progress: 100 },
-];
+import {
+  dealRecords,
+  faTeams,
+  getDisclosureStageLabel,
+  getPipelineCounts,
+  getTradeModeLabel,
+} from '@/lib/trading-v2';
 
 export default function DealsPage() {
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Negotiating': return 'bg-yellow-100 text-yellow-700';
-      case 'Signed': return 'bg-blue-100 text-blue-700';
-      case 'Closing': return 'bg-purple-100 text-purple-700';
-      case 'Completed': return 'bg-green-100 text-green-700';
-      default: return 'bg-slate-100 text-slate-700';
-    }
-  };
-
-  const getStatusProgress = (status: string) => {
-    switch (status) {
-      case 'Negotiating': return 'bg-yellow-500';
-      case 'Signed': return 'bg-blue-500';
-      case 'Closing': return 'bg-purple-500';
-      case 'Completed': return 'bg-green-500';
-      default: return 'bg-slate-500';
-    }
-  };
+  const pipeline = getPipelineCounts();
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">Deal Management</h1>
-            <p className="text-slate-500 mt-1">Track and manage transaction pipeline</p>
-          </div>
-          <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
-            + Create Deal
-          </button>
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">Deal Pipeline</h1>
+          <p className="mt-2 text-slate-500">
+            以 PRD V2 生命周期展示交易：listing → negotiation → LOI → diligence → SPA → escrow →
+            transfer → settlement。
+          </p>
         </div>
 
-        {/* Pipeline Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {['Negotiating', 'Signed', 'Closing', 'Completed'].map((stage) => {
-            const count = mockDeals.filter(d => d.status === stage).length;
-            return (
-              <div key={stage} className="bg-white p-4 rounded-xl border border-slate-200 text-center">
-                <p className="text-2xl font-bold text-slate-900">{count}</p>
-                <p className="text-xs text-slate-500 mt-1">{stage}</p>
-              </div>
-            );
-          })}
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+          {pipeline.map((item) => (
+            <div key={item.stage} className="rounded-2xl border border-slate-200 bg-white p-4">
+              <p className="text-xs text-slate-500">{item.stage}</p>
+              <p className="mt-2 text-2xl font-bold text-slate-900">{item.count}</p>
+            </div>
+          ))}
         </div>
 
-        {/* Pipeline Visualization */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">Deal Pipeline</h2>
-          <div className="flex items-center gap-2">
-            {['Negotiating', 'Signed', 'Closing', 'Completed'].map((stage, index) => (
-              <React.Fragment key={stage}>
-                <div className="flex-1 text-center">
-                  <div className={`h-2 rounded-full ${
-                    stage === 'Negotiating' ? 'bg-yellow-500' :
-                    stage === 'Signed' ? 'bg-blue-500' :
-                    stage === 'Closing' ? 'bg-purple-500' : 'bg-green-500'
-                  }`} />
-                  <p className="text-xs text-slate-600 mt-2 font-medium">{stage}</p>
-                </div>
-                {index < 3 && <div className="w-8 h-0.5 bg-slate-300" />}
-              </React.Fragment>
-            ))}
-          </div>
-        </div>
-
-        {/* Deals Table */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="overflow-x-auto">
+        <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="text-xl font-bold text-slate-900">PRD V2 Current Deals</h2>
+          <div className="mt-6 overflow-x-auto">
             <table className="w-full">
               <thead className="bg-slate-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Asset</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Buyer → Seller</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Price</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">FA Fee</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>
+                  <HeaderCell>Deal</HeaderCell>
+                  <HeaderCell>Trade Mode</HeaderCell>
+                  <HeaderCell>Amount</HeaderCell>
+                  <HeaderCell>Current Stage</HeaderCell>
+                  <HeaderCell>Disclosure</HeaderCell>
+                  <HeaderCell>LOI</HeaderCell>
+                  <HeaderCell>Data Room</HeaderCell>
+                  <HeaderCell>Escrow</HeaderCell>
+                  <HeaderCell>Settlement</HeaderCell>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
-                {mockDeals.map((deal) => (
-                  <tr key={deal.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4 text-sm font-medium text-slate-900">{deal.asset}</td>
-                    <td className="px-6 py-4 text-sm text-slate-500">
-                      <div>{deal.buyer}</div>
-                      <div className="text-xs text-slate-400">→ {deal.seller}</div>
-                    </td>
-                    <td className="px-6 py-4 text-sm font-bold text-slate-900">{deal.price}</td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2 py-1 text-xs rounded-full font-medium ${getStatusColor(deal.status)}`}>{deal.status}</span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-slate-500">{deal.fee}</td>
-                    <td className="px-6 py-4">
-                      <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">View</button>
-                      {deal.status === 'Negotiating' && (
-                        <button className="ml-3 text-green-600 hover:text-green-800 text-sm font-medium">Approve</button>
-                      )}
-                    </td>
+                {dealRecords.map((deal) => (
+                  <tr key={deal.id}>
+                    <BodyCell>
+                      <div>
+                        <p className="font-semibold text-slate-900">{deal.companyName}</p>
+                        <p className="text-xs text-slate-500">
+                          {deal.bidOrderId} ↔ {deal.askOrderId}
+                        </p>
+                      </div>
+                    </BodyCell>
+                    <BodyCell>{getTradeModeLabel(deal.tradeMode)}</BodyCell>
+                    <BodyCell>{deal.amountLabel}</BodyCell>
+                    <BodyCell>
+                      <StatusPill>{deal.currentStage}</StatusPill>
+                    </BodyCell>
+                    <BodyCell>{getDisclosureStageLabel(deal.disclosureStage)}</BodyCell>
+                    <BodyCell>{deal.loiSigned ? 'Signed' : 'Pending'}</BodyCell>
+                    <BodyCell>{deal.dataRoomReady ? 'Ready' : 'Blocked'}</BodyCell>
+                    <BodyCell>{deal.escrowReady ? 'Ready' : 'Blocked'}</BodyCell>
+                    <BodyCell>{deal.settlementReady ? 'Ready' : 'Blocked'}</BodyCell>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+        </section>
+
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+          <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 className="text-xl font-bold text-slate-900">Execution Readiness</h2>
+            <div className="mt-5 space-y-4">
+              {dealRecords.map((deal) => (
+                <div key={deal.id} className="rounded-2xl border border-slate-200 p-4">
+                  <p className="font-semibold text-slate-900">
+                    {deal.companyName} · {deal.shareClass}
+                  </p>
+                  <div className="mt-3 grid grid-cols-2 gap-3 text-sm text-slate-700">
+                    <span>LOI: {deal.loiSigned ? 'Done' : 'Pending'}</span>
+                    <span>Disclosure: {getDisclosureStageLabel(deal.disclosureStage)}</span>
+                    <span>Escrow: {deal.escrowReady ? 'Ready' : 'Waiting'}</span>
+                    <span>Settlement: {deal.settlementReady ? 'Ready' : 'Waiting'}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+            <h2 className="text-xl font-bold text-slate-900">FA Team Participation</h2>
+            <div className="mt-5 space-y-4">
+              {faTeams.map((team) => (
+                <div key={team.id} className="rounded-2xl border border-slate-200 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="font-semibold text-slate-900">{team.name}</p>
+                      <p className="text-sm text-slate-500">{team.id}</p>
+                    </div>
+                    <StatusPill>{team.status}</StatusPill>
+                  </div>
+                  <div className="mt-4 space-y-2">
+                    {team.members.map((member) => (
+                      <div key={`${team.id}-${member.faId}`} className="flex items-center justify-between text-sm">
+                        <span className="text-slate-700">
+                          {member.role} · {member.name}
+                        </span>
+                        <span className="font-medium text-slate-900">
+                          {(member.commissionRatio * 100).toFixed(0)}%
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
         </div>
       </div>
     </DashboardLayout>
   );
+}
+
+function HeaderCell({ children }: { children: React.ReactNode }) {
+  return <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">{children}</th>;
+}
+
+function BodyCell({ children }: { children: React.ReactNode }) {
+  return <td className="px-4 py-4 text-sm text-slate-700">{children}</td>;
+}
+
+function StatusPill({ children }: { children: React.ReactNode }) {
+  return <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">{children}</span>;
 }

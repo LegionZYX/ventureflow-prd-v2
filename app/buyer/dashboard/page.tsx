@@ -26,7 +26,14 @@ interface BuyerProfile {
 
 export default function BuyerDashboardPage() {
   const router = useRouter();
-  const [buyer, setBuyer] = useState<BuyerProfile | null>(null);
+  const [buyer] = useState<BuyerProfile | null>(() => {
+    if (typeof window === 'undefined') {
+      return null;
+    }
+
+    const session = localStorage.getItem('vf_buyer_session');
+    return session ? (JSON.parse(session) as BuyerProfile) : null;
+  });
   const [searchTerm, setSearchTerm] = useState('');
   const [capitalRange, setCapitalRange] = useState('all');
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
@@ -84,14 +91,10 @@ export default function BuyerDashboardPage() {
   ];
 
   useEffect(() => {
-    const session = localStorage.getItem('vf_buyer_session');
-    if (!session) {
+    if (!buyer) {
       router.push('/buyer/login');
-      return;
     }
-    const buyerData = JSON.parse(session);
-    setBuyer(buyerData);
-  }, [router]);
+  }, [buyer, router]);
 
   // 智能推荐算法
   const calculateMatchScore = (deal: Deal, capital: string): number => {
@@ -263,7 +266,7 @@ export default function BuyerDashboardPage() {
             根据您的资金规模和投资偏好，系统自动匹配以下高潜力项目
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {dealsWithScores.slice(0, 3).map((deal, index) => (
+            {dealsWithScores.slice(0, 3).map((deal) => (
               <button
                 key={deal.id}
                 onClick={() => setSelectedDeal(deal)}

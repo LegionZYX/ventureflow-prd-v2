@@ -32,6 +32,8 @@ const values = [
 
 export default function AboutPage() {
   const { t } = useLang();
+  void stats;
+  void t;
 
   return (
     <BuyerLayout>

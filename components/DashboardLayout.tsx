@@ -12,7 +12,7 @@ const navItems = [
   { name: 'orders.title', href: '/dashboard/orders', icon: '📦' },
   { name: 'assets.title', href: '/dashboard/assets', icon: '💼' },
   { name: 'deals.title', href: '/dashboard/deals', icon: '🤝' },
-  { name: '意向登记', href: '/dashboard/intent-registry', icon: '📝' },
+  { name: 'intentReg.title', href: '/dashboard/intent-registry', icon: '📝' },
   { name: 'agreements.title', href: '/dashboard/agreements', icon: '📄' },
   { name: 'commission.title', href: '/dashboard/commission', icon: '💰' },
   { name: 'aiTools.title', href: '/dashboard/ai-tools', icon: '🤖' },

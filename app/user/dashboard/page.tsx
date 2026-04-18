@@ -15,14 +15,6 @@ interface Holding {
   gainLoss: number;
 }
 
-interface Inquiry {
-  id: number;
-  asset: string;
-  amount: string;
-  status: 'Pending' | 'In Review' | 'Meeting Scheduled' | 'Completed';
-  date: string;
-}
-
 const portfolio = {
   name: 'John Investor',
   email: 'investor@example.com',

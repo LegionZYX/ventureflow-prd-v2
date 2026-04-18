@@ -1,179 +1,126 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import BuyerLayout from '@/components/BuyerLayout';
 import Link from 'next/link';
-import { useLang } from '@/contexts/LangContext';
-import { Company, mockCompanies, mockPublicDeals } from '@/lib/mockData';
-import { loadCompanies, saveCompanies } from '@/lib/storage';
-import { initializeDefaultData } from '@/lib/share';
+import BuyerLayout from '@/components/BuyerLayout';
+import {
+  getActiveListings,
+  getDisclosureStageLabel,
+  getMarketplaceCompanies,
+  getTradeModeLabel,
+  getVerificationBadgeColor,
+} from '@/lib/trading-v2';
 
 export default function OpportunitiesPage() {
-  const { t } = useLang();
-  const [companies, setCompanies] = useState<Company[]>([]);
-  const [filter, setFilter] = useState('All');
-
-  useEffect(() => {
-    initializeDefaultData(mockCompanies, mockPublicDeals);
-    const loaded = loadCompanies();
-    if (loaded.length > 0) {
-      setCompanies(loaded);
-    } else {
-      setCompanies(mockCompanies);
-      saveCompanies(mockCompanies);
-    }
-  }, []);
-
-  const filteredCompanies = filter === 'All'
-    ? companies
-    : companies.filter(c => c.industry === filter || c.tags.includes(filter));
-
-  const translateIndustry = (industry: string) => {
-    if (t('nav.home') === '首页') {
-      const translations: Record<string, string> = {
-        'Technology': '科技',
-        'AI': '人工智能',
-        'Space': '航天',
-        'All': '全部',
-      };
-      return translations[industry] || industry;
-    }
-    return industry;
-  };
-
-  const industries = [
-    { key: 'All', label: 'All' },
-    { key: 'Technology', label: 'Technology' },
-    { key: 'AI', label: 'AI' },
-    { key: 'Space', label: 'Space' },
-  ];
-
-  const getStatusText = (isActive: boolean) => {
-    if (t('nav.home') === '首页') {
-      return isActive ? '活跃' : '未活跃';
-    }
-    return isActive ? 'Active' : 'Inactive';
-  };
+  const companies = getMarketplaceCompanies();
+  const listings = getActiveListings();
 
   return (
     <BuyerLayout>
-      {/* Hero */}
-      <section className="bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-            {t('opp.page.title')}
-          </h1>
-          <p className="text-blue-100 text-lg max-w-3xl">
-            {t('opp.page.description')}
-          </p>
+      <section className="bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 py-16">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="max-w-4xl">
+            <p className="mb-4 inline-flex rounded-full bg-white/10 px-4 py-1 text-sm text-blue-100">
+              PRD V2 Marketplace
+            </p>
+            <h1 className="text-4xl font-bold text-white sm:text-5xl">
+              用 `L1 / L2 / Direct` 三种交易方式来组织 Pre-IPO 交易机会
+            </h1>
+            <p className="mt-4 max-w-3xl text-lg text-blue-100">
+              当前阶段只展示符合 PRD V2 的标准化 listing：交易方式、股份类别、价格区间、
+              数量区间、卖方隐私级别、验证状态，以及 market signal。
+            </p>
+          </div>
         </div>
       </section>
 
-      {/* Content */}
       <section className="py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center mb-8">
-            <div className="flex flex-wrap gap-2">
-              {industries.map((type) => (
-                <button
-                  key={type.key}
-                  onClick={() => setFilter(type.key)}
-                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                    filter === type.key
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50'
-                  }`}
-                >
-                  {translateIndustry(type.label)}
-                </button>
-              ))}
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+            <div className="rounded-2xl border border-slate-200 bg-white p-5">
+              <p className="text-sm text-slate-500">Active Listings</p>
+              <p className="mt-2 text-3xl font-bold text-slate-900">{listings.length}</p>
             </div>
-            <Link
-              href="/sell"
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center gap-2"
-            >
-              {t('opp.page.sellShares')}
-            </Link>
-          </div>
-
-          {/* Stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-            <div className="bg-white p-4 rounded-xl border border-slate-200">
-              <p className="text-sm text-slate-500">{t('opp.page.totalCompanies')}</p>
-              <p className="text-2xl font-bold text-slate-900">{companies.length}</p>
+            <div className="rounded-2xl border border-slate-200 bg-white p-5">
+              <p className="text-sm text-slate-500">Companies</p>
+              <p className="mt-2 text-3xl font-bold text-slate-900">{companies.length}</p>
             </div>
-            <div className="bg-white p-4 rounded-xl border border-slate-200">
-              <p className="text-sm text-slate-500">{t('opp.page.activeListings')}</p>
-              <p className="text-2xl font-bold text-green-600">
-                {companies.filter(c => c.status === 'active').length}
+            <div className="rounded-2xl border border-slate-200 bg-white p-5">
+              <p className="text-sm text-slate-500">Open Bid Signals</p>
+              <p className="mt-2 text-3xl font-bold text-blue-600">
+                {listings.reduce((sum, listing) => sum + listing.activeBidCount, 0)}
               </p>
             </div>
-            <div className="bg-white p-4 rounded-xl border border-slate-200">
-              <p className="text-sm text-slate-500">{t('opp.page.totalValuation')}</p>
-              <p className="text-2xl font-bold text-slate-900">$235.5B</p>
+            <div className="rounded-2xl border border-slate-200 bg-white p-5">
+              <p className="text-sm text-slate-500">Privacy Guard</p>
+              <p className="mt-2 text-lg font-bold text-slate-900">Seller Alias Only</p>
             </div>
           </div>
 
-          {/* Companies Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredCompanies.map((company) => (
-              <Link
-                key={company.id}
-                href={`/opportunities/${company.id}`}
-                className="bg-white rounded-xl border border-slate-200 p-6 hover:border-blue-500 hover:shadow-lg transition-all cursor-pointer"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <span className="text-4xl">{company.logo}</span>
-                    <div>
-                      <h3 className="font-semibold text-slate-900 text-lg">{company.name}</h3>
-                      <p className="text-sm text-slate-500">{translateIndustry(company.industry)}</p>
+          <div className="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-2">
+            {companies.map((company) => (
+              <div key={company.companyName} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h2 className="text-2xl font-bold text-slate-900">{company.companyName}</h2>
+                    <p className="mt-1 text-sm text-slate-500">
+                      {company.listings.length} listings · {company.activeDeals} active deals
+                    </p>
+                  </div>
+                  <Link
+                    href={`/opportunities/${company.companyName.toLowerCase()}`}
+                    className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                  >
+                    View Market
+                  </Link>
+                </div>
+
+                <div className="mt-6 space-y-4">
+                  {company.listings.map((listing) => (
+                    <div key={listing.id} className="rounded-2xl border border-slate-200 p-5">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="rounded-full bg-slate-900 px-3 py-1 text-xs font-medium text-white">
+                          {getTradeModeLabel(listing.tradeMode)}
+                        </span>
+                        <span
+                          className={`rounded-full px-3 py-1 text-xs font-medium ${getVerificationBadgeColor(
+                            listing.sellerVerification,
+                          )}`}
+                        >
+                          {listing.sellerVerification}
+                        </span>
+                        <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
+                          {getDisclosureStageLabel(listing.disclosureStage)}
+                        </span>
+                      </div>
+
+                      <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <p className="text-slate-500">Share Class</p>
+                          <p className="font-semibold text-slate-900">{listing.shareClass}</p>
+                        </div>
+                        <div>
+                          <p className="text-slate-500">Seller Alias</p>
+                          <p className="font-semibold text-slate-900">{listing.sellerAlias}</p>
+                        </div>
+                        <div>
+                          <p className="text-slate-500">Price Range</p>
+                          <p className="font-semibold text-slate-900">{listing.priceRangeLabel}</p>
+                        </div>
+                        <div>
+                          <p className="text-slate-500">Quantity Range</p>
+                          <p className="font-semibold text-slate-900">{listing.quantityRangeLabel}</p>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 flex flex-wrap gap-4 text-sm text-slate-600">
+                        <span>Active bids: {listing.activeBidCount}</span>
+                        <span>Match queue: {listing.activeMatchCount}</span>
+                        <span>Public identity: blocked</span>
+                      </div>
                     </div>
-                  </div>
-                  <span className={`px-3 py-1 text-xs rounded-full font-medium ${
-                    company.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-700'
-                  }`}>
-                    {getStatusText(company.status === 'active')}
-                  </span>
-                </div>
-
-                <p className="text-sm text-slate-600 mb-4 line-clamp-2">
-                  {company.description}
-                </p>
-
-                {/* Stats Grid */}
-                <div className="grid grid-cols-2 gap-3 mb-4">
-                  <div>
-                    <p className="text-xs text-slate-500">{t('company.valuation')}</p>
-                    <p className="font-semibold text-slate-900">{company.valuation}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-slate-500">{t('company.founded')}</p>
-                    <p className="font-semibold text-slate-900">{company.foundedYear}</p>
-                  </div>
-                  <div className="col-span-2">
-                    <p className="text-xs text-slate-500">{t('company.headquarters')}</p>
-                    <p className="font-semibold text-slate-900">{company.headquarters}</p>
-                  </div>
-                </div>
-
-                {/* Tags */}
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {company.tags.map((tag) => (
-                    <span key={tag} className="px-2 py-1 text-xs bg-slate-100 text-slate-700 rounded-md">
-                      {tag}
-                    </span>
                   ))}
                 </div>
-
-                {/* CTA */}
-                <div className="text-center">
-                  <button className="w-full px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors font-medium">
-                    {t('opp.page.learnMore')} →
-                  </button>
-                </div>
-              </Link>
+              </div>
             ))}
           </div>
         </div>

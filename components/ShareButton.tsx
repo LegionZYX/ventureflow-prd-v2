@@ -37,6 +37,8 @@ export default function ShareButton({ dealId, dealName }: ShareButtonProps) {
   return (
     <button
       onClick={handleShare}
+      title={`Share ${dealName}`}
+      aria-label={`Share ${dealName}`}
       className="px-3 py-2 border border-slate-300 text-slate-700 text-sm rounded-lg hover:bg-slate-50 hover:border-blue-500 hover:text-blue-600 transition-colors flex items-center gap-2"
     >
       {copied ? '✓ Copied!' : '🔗 Share Deal'}

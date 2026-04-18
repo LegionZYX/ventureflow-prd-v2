@@ -1,118 +1,160 @@
 'use client';
 
-import React from 'react';
+import { useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
-
-const mockCommissions = [
-  { id: 1, deal: '字节跳动 H 轮 #1', totalFee: '$2.5M', platform: '$750K (30%)', brokers: '$1.75M', status: 'Pending' },
-  { id: 2, deal: '员工期权包 #2', totalFee: '$720K', platform: '$360K (50%)', brokers: '$360K', status: 'Paid' },
-  { id: 3, deal: 'AI 视频公司 #3', totalFee: '$1.28M', platform: '$512K (40%)', brokers: '$768K', status: 'Pending' },
-  { id: 4, deal: '字节跳动 H 轮 #4', totalFee: '$2.52M', platform: '$756K (30%)', brokers: '$1.76M', status: 'Paid' },
-];
+import { faTeams, getReferralRewards } from '@/lib/trading-v2';
+import {
+  advanceRewardStatus,
+  canAdvanceReward,
+  getRewardActionLabel,
+} from '@/lib/trading-v2-workflow';
 
 export default function CommissionPage() {
+  const [rewards, setRewards] = useState(getReferralRewards());
+
+  const advanceReward = (id: string) => {
+    setRewards((current) =>
+      current.map((reward) =>
+        reward.id === id
+          ? {
+              ...reward,
+              ...advanceRewardStatus(reward),
+              recommendation: reward.recommendation,
+              deal: reward.deal,
+            }
+          : reward,
+      ),
+    );
+  };
+
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">Commission Management</h1>
-            <p className="text-slate-500 mt-1">Track FA fees and broker splits</p>
-          </div>
-          <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
-            + Add Commission
-          </button>
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">Commission & Referral Rewards</h1>
+          <p className="mt-2 text-slate-500">
+            这里把两种分配拆开看：交易执行团队分佣，以及 FA 因推荐未注册买家并最终促成成交而获得的奖励。
+          </p>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-gradient-to-br from-blue-500 to-blue-600 p-4 rounded-xl text-white">
-            <p className="text-sm text-blue-100">Total Fees (MTD)</p>
-            <p className="text-2xl font-bold mt-1">$7.02M</p>
-          </div>
-          <div className="bg-gradient-to-br from-green-500 to-green-600 p-4 rounded-xl text-white">
-            <p className="text-sm text-green-100">Platform Share</p>
-            <p className="text-2xl font-bold mt-1">$2.38M</p>
-          </div>
-          <div className="bg-gradient-to-br from-orange-500 to-orange-600 p-4 rounded-xl text-white">
-            <p className="text-sm text-orange-100">Pending Payout</p>
-            <p className="text-2xl font-bold mt-1">$3.78M</p>
-          </div>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+          <StatCard label="FA Teams" value={String(faTeams.length)} />
+          <StatCard label="Referral Rewards" value={String(rewards.length)} />
+          <StatCard
+            label="Pending Rewards"
+            value={String(rewards.filter((item) => item.status === 'PENDING').length)}
+          />
+          <StatCard
+            label="Approved / Paid"
+            value={String(
+              rewards.filter((item) => item.status === 'APPROVED' || item.status === 'PAID')
+                .length,
+            )}
+          />
         </div>
 
-        {/* Commissions Table */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="overflow-x-auto">
+        <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="text-xl font-bold text-slate-900">FA Team Split</h2>
+          <div className="mt-5 space-y-4">
+            {faTeams.map((team) => (
+              <div key={team.id} className="rounded-2xl border border-slate-200 p-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-lg font-semibold text-slate-900">{team.name}</p>
+                    <p className="text-sm text-slate-500">{team.status}</p>
+                  </div>
+                  <StatusPill>Execution Split</StatusPill>
+                </div>
+
+                <div className="mt-4 space-y-3">
+                  {team.members.map((member) => (
+                    <div
+                      key={`${team.id}-${member.faId}`}
+                      className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 text-sm"
+                    >
+                      <span className="text-slate-700">
+                        {member.role} · {member.name}
+                      </span>
+                      <span className="font-semibold text-slate-900">
+                        {(member.commissionRatio * 100).toFixed(0)}%
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="text-xl font-bold text-slate-900">Referral Reward Board</h2>
+          <p className="mt-1 text-sm text-slate-500">
+            规则：FA 推荐未注册买家，形成绑定关系后，如果后续 deal 落地，则按 reward board 发放推荐奖励。
+          </p>
+
+          <div className="mt-5 overflow-x-auto">
             <table className="w-full">
               <thead className="bg-slate-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Deal</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Total Fee</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Platform</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Brokers</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>
+                  <HeaderCell>FA</HeaderCell>
+                  <HeaderCell>Prospect</HeaderCell>
+                  <HeaderCell>Deal</HeaderCell>
+                  <HeaderCell>Trigger</HeaderCell>
+                  <HeaderCell>Reward Type</HeaderCell>
+                  <HeaderCell>Amount</HeaderCell>
+                  <HeaderCell>Status</HeaderCell>
+                  <HeaderCell>Action</HeaderCell>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
-                {mockCommissions.map((comm) => (
-                  <tr key={comm.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4 text-sm font-medium text-slate-900">{comm.deal}</td>
-                    <td className="px-6 py-4 text-sm font-bold text-slate-900">{comm.totalFee}</td>
-                    <td className="px-6 py-4 text-sm text-slate-500">{comm.platform}</td>
-                    <td className="px-6 py-4 text-sm text-slate-500">{comm.brokers}</td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2 py-1 text-xs rounded-full font-medium ${
-                        comm.status === 'Paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-                      }`}>{comm.status}</span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">Details</button>
-                      {comm.status === 'Pending' && (
-                        <button className="ml-3 text-green-600 hover:text-green-800 text-sm font-medium">Pay</button>
-                      )}
-                    </td>
+                {rewards.map((reward) => (
+                  <tr key={reward.id}>
+                    <BodyCell>{reward.recommendation?.faName ?? reward.faId}</BodyCell>
+                    <BodyCell>{reward.recommendation?.prospectName ?? '-'}</BodyCell>
+                    <BodyCell>{reward.deal?.companyName ?? reward.relatedDealId}</BodyCell>
+                    <BodyCell>{reward.trigger}</BodyCell>
+                    <BodyCell>{reward.rewardType}</BodyCell>
+                    <BodyCell>{reward.amountLabel}</BodyCell>
+                    <BodyCell>
+                      <StatusPill>{reward.status}</StatusPill>
+                    </BodyCell>
+                    <BodyCell>
+                      <button
+                        onClick={() => advanceReward(reward.id)}
+                        disabled={!canAdvanceReward(reward.status)}
+                        className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+                      >
+                        {getRewardActionLabel(reward.status)}
+                      </button>
+                    </BodyCell>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        </div>
-
-        {/* Fee Split Configuration */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">Fee Split Configuration</h2>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
-              <div>
-                <p className="font-medium text-slate-900">Default Platform Share</p>
-                <p className="text-sm text-slate-500">Percentage of FA fee retained by platform</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-32 h-2 bg-slate-200 rounded-full overflow-hidden">
-                  <div className="w-2/5 h-full bg-blue-500 rounded-full" />
-                </div>
-                <span className="text-lg font-bold text-blue-600">40%</span>
-              </div>
-            </div>
-            <div className="border-t border-slate-200 pt-4">
-              <h3 className="font-medium text-slate-900 mb-3">Broker Split Rules</h3>
-              <div className="space-y-2">
-                {[
-                  { name: 'Primary Broker (Deal Originator)', share: '50%' },
-                  { name: 'Secondary Broker (Buyer Side)', share: '30%' },
-                  { name: 'Referral Partner', share: '20%' },
-                ].map((rule) => (
-                  <div key={rule.name} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                    <span className="text-sm text-slate-700">{rule.name}</span>
-                    <span className="font-medium text-slate-900">{rule.share}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
+        </section>
       </div>
     </DashboardLayout>
   );
+}
+
+function StatCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5">
+      <p className="text-sm text-slate-500">{label}</p>
+      <p className="mt-2 text-3xl font-bold text-slate-900">{value}</p>
+    </div>
+  );
+}
+
+function HeaderCell({ children }: { children: React.ReactNode }) {
+  return <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">{children}</th>;
+}
+
+function BodyCell({ children }: { children: React.ReactNode }) {
+  return <td className="px-4 py-4 text-sm text-slate-700">{children}</td>;
+}
+
+function StatusPill({ children }: { children: React.ReactNode }) {
+  return <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">{children}</span>;
 }

@@ -7,6 +7,8 @@ import { useLang } from '@/contexts/LangContext';
 
 export default function ContactPage() {
   const { t } = useLang();
+  void Link;
+  void t;
   const [formData, setFormData] = useState({
     name: '',
     company: '',

@@ -1,229 +1,223 @@
 'use client';
 
-import React, { useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
-
-// Mock data for buy intents
-const mockBuyIntents = [
-  { id: 1, name: 'CITIC Hong Kong', email: 'citic@example.com', targetCompany: 'ByteDance', investmentRange: '$200M', timeline: 'Immediate', status: 'New', createdAt: '2026-03-01' },
-  { id: 2, name: 'Justin@Antalpha', email: 'justin@antalpha.com', targetCompany: 'ByteDance', investmentRange: '$100M', timeline: 'Short', status: 'Contacted', createdAt: '2026-02-28' },
-  { id: 3, name: 'Li Ming', email: 'liming@example.com', targetCompany: 'SpaceX', investmentRange: '$100M', timeline: 'Medium', status: 'Qualified', createdAt: '2026-02-27' },
-];
-
-// Mock data for sell intents
-const mockSellIntents = [
-  { id: 1, name: 'Ny', email: 'ny@example.com', companyName: 'ByteDance', shares: '1000', estimatedValue: '$150M', urgency: 'High', status: 'New', createdAt: '2026-03-01' },
-  { id: 2, name: 'FCS Family Office', email: 'fcs@example.com', companyName: 'ByteDance', shares: '500', estimatedValue: '$50M', urgency: 'Medium', status: 'Valuation Sent', createdAt: '2026-02-28' },
-  { id: 3, name: 'K Broker', email: 'kbroker@example.com', companyName: 'Stripe', shares: '5000', estimatedValue: '$700M', urgency: 'Low', status: 'In Negotiation', createdAt: '2026-02-25' },
-];
+import {
+  getAskRegistry,
+  getBidRegistry,
+  listingRecords,
+  orderMatches,
+  getTradeModeLabel,
+} from '@/lib/trading-v2';
 
 export default function IntentRegistryPage() {
-  const [intentType, setIntentType] = useState<'all' | 'buy' | 'sell'>('all');
+  const bidRegistry = getBidRegistry();
+  const askRegistry = getAskRegistry();
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">意向登记管理</h1>
-            <p className="text-slate-500 mt-1">Trading Intent Registry - Manage buy and sell intentions</p>
-          </div>
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">Bid / Ask Registry</h1>
+          <p className="mt-2 text-slate-500">
+            管理端不再只看“意向登记”，而是看 PRD V2 里的 bid、ask、listing 和 match queue。
+          </p>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white p-4 rounded-xl border border-slate-200">
-            <p className="text-sm text-slate-500">Total Intents</p>
-            <p className="text-2xl font-bold text-slate-900">{mockBuyIntents.length + mockSellIntents.length}</p>
-          </div>
-          <div className="bg-white p-4 rounded-xl border border-slate-200">
-            <p className="text-sm text-slate-500">Buy Intents</p>
-            <p className="text-2xl font-bold text-blue-600">{mockBuyIntents.length}</p>
-          </div>
-          <div className="bg-white p-4 rounded-xl border border-slate-200">
-            <p className="text-sm text-slate-500">Sell Intents</p>
-            <p className="text-2xl font-bold text-green-600">{mockSellIntents.length}</p>
-          </div>
-          <div className="bg-white p-4 rounded-xl border border-slate-200">
-            <p className="text-sm text-slate-500">New Today</p>
-            <p className="text-2xl font-bold text-green-600">2</p>
-          </div>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+          <StatCard label="Bid Orders" value={String(bidRegistry.length)} tone="blue" />
+          <StatCard label="Ask Orders" value={String(askRegistry.length)} tone="emerald" />
+          <StatCard label="Active Listings" value={String(listingRecords.length)} tone="slate" />
+          <StatCard label="Match Queue" value={String(orderMatches.length)} tone="purple" />
         </div>
 
-        {/* Type Filter */}
-        <div className="flex gap-2">
-          <button
-            onClick={() => setIntentType('all')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              intentType === 'all'
-                ? 'bg-blue-600 text-white'
-                : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50'
-            }`}
-          >
-            All ({mockBuyIntents.length + mockSellIntents.length})
-          </button>
-          <button
-            onClick={() => setIntentType('buy')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              intentType === 'buy'
-                ? 'bg-blue-600 text-white'
-                : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50'
-            }`}
-          >
-            👤 Buy Intents ({mockBuyIntents.length})
-          </button>
-          <button
-            onClick={() => setIntentType('sell')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              intentType === 'sell'
-                ? 'bg-green-600 text-white'
-                : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50'
-            }`}
-          >
-            🏷️ Sell Intents ({mockSellIntents.length})
-          </button>
-        </div>
-
-        {/* Buy Intents Table */}
-        {(intentType === 'all' || intentType === 'buy') && (
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-200 bg-blue-50">
-              <h2 className="text-lg font-bold text-slate-900">👤 买方意向登记</h2>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-slate-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Name</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Target</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Investment</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Timeline</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Created</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Actions</th>
+        <RegistrySection
+          title="Buyer Bid Orders"
+          description="必须经过 KYC 与 accredited investor guard 才能真正进入 active 状态。"
+        >
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-slate-50">
+                <tr>
+                  <HeaderCell>Buyer</HeaderCell>
+                  <HeaderCell>Mode</HeaderCell>
+                  <HeaderCell>Target</HeaderCell>
+                  <HeaderCell>Price</HeaderCell>
+                  <HeaderCell>Quantity</HeaderCell>
+                  <HeaderCell>KYC</HeaderCell>
+                  <HeaderCell>Qualified</HeaderCell>
+                  <HeaderCell>Valid Until</HeaderCell>
+                  <HeaderCell>Status</HeaderCell>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200">
+                {bidRegistry.map((bid) => (
+                  <tr key={bid.id}>
+                    <BodyCell>{bid.buyer?.displayName ?? bid.buyerId}</BodyCell>
+                    <BodyCell>{getTradeModeLabel(bid.tradeMode)}</BodyCell>
+                    <BodyCell>{bid.companyName}</BodyCell>
+                    <BodyCell>{bid.bidPriceLabel}</BodyCell>
+                    <BodyCell>{bid.quantityLabel}</BodyCell>
+                    <BodyCell>{bid.buyer?.kycStatus ?? '-'}</BodyCell>
+                    <BodyCell>{bid.accreditedInvestor ? 'Yes' : 'No'}</BodyCell>
+                    <BodyCell>{bid.validUntil}</BodyCell>
+                    <BodyCell>
+                      <StatusPill>{bid.status}</StatusPill>
+                    </BodyCell>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200">
-                  {mockBuyIntents.map((intent) => (
-                    <tr key={intent.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-6 py-4">
-                        <div>
-                          <p className="font-medium text-slate-900">{intent.name}</p>
-                          <p className="text-xs text-slate-500">{intent.email}</p>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-sm text-slate-900">{intent.targetCompany}</span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-sm font-medium text-slate-900">{intent.investmentRange}</span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`px-2 py-1 text-xs rounded-full font-medium ${
-                          intent.timeline === 'Immediate' ? 'bg-red-100 text-red-700' :
-                          intent.timeline === 'Short' ? 'bg-orange-100 text-orange-700' :
-                          intent.timeline === 'Medium' ? 'bg-yellow-100 text-yellow-700' :
-                          'bg-green-100 text-green-700'
-                        }`}>
-                          {intent.timeline}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`px-2 py-1 text-xs rounded-full font-medium ${
-                          intent.status === 'New' ? 'bg-blue-100 text-blue-700' :
-                          intent.status === 'Contacted' ? 'bg-purple-100 text-purple-700' :
-                          'bg-green-100 text-green-700'
-                        }`}>
-                          {intent.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-slate-500">{intent.createdAt}</td>
-                      <td className="px-6 py-4">
-                        <div className="flex gap-2">
-                          <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">View</button>
-                          <button className="text-purple-600 hover:text-purple-800 text-sm font-medium">📅 Schedule</button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+            </table>
           </div>
-        )}
+        </RegistrySection>
 
-        {/* Sell Intents Table */}
-        {(intentType === 'all' || intentType === 'sell') && (
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-200 bg-green-50">
-              <h2 className="text-lg font-bold text-slate-900">🏷️ 卖方意向登记</h2>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-slate-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Name</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Company</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Shares</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Value</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Urgency</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Created</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Actions</th>
+        <RegistrySection
+          title="Seller Ask Orders"
+          description="卖方 ask 必须经过 ownership review 和 transferability review 才能公开生成 listing。"
+        >
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-slate-50">
+                <tr>
+                  <HeaderCell>Seller Alias</HeaderCell>
+                  <HeaderCell>Mode</HeaderCell>
+                  <HeaderCell>Company</HeaderCell>
+                  <HeaderCell>Share Class</HeaderCell>
+                  <HeaderCell>Price</HeaderCell>
+                  <HeaderCell>Quantity</HeaderCell>
+                  <HeaderCell>Ownership</HeaderCell>
+                  <HeaderCell>Restriction</HeaderCell>
+                  <HeaderCell>Status</HeaderCell>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200">
+                {askRegistry.map((ask) => (
+                  <tr key={ask.id}>
+                    <BodyCell>{ask.sellerAlias}</BodyCell>
+                    <BodyCell>{getTradeModeLabel(ask.tradeMode)}</BodyCell>
+                    <BodyCell>{ask.companyName}</BodyCell>
+                    <BodyCell>{ask.shareClass}</BodyCell>
+                    <BodyCell>{ask.askPriceLabel}</BodyCell>
+                    <BodyCell>{ask.quantityLabel}</BodyCell>
+                    <BodyCell>{ask.ownershipStatus}</BodyCell>
+                    <BodyCell>{ask.transferRestrictions}</BodyCell>
+                    <BodyCell>
+                      <StatusPill>{ask.status}</StatusPill>
+                    </BodyCell>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200">
-                  {mockSellIntents.map((intent) => (
-                    <tr key={intent.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-6 py-4">
-                        <div>
-                          <p className="font-medium text-slate-900">{intent.name}</p>
-                          <p className="text-xs text-slate-500">{intent.email}</p>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-sm text-slate-900">{intent.companyName}</span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-sm text-slate-900">{intent.shares}</span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-sm font-medium text-slate-900">{intent.estimatedValue}</span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`px-2 py-1 text-xs rounded-full font-medium ${
-                          intent.urgency === 'High' ? 'bg-red-100 text-red-700' :
-                          intent.urgency === 'Medium' ? 'bg-yellow-100 text-yellow-700' :
-                          'bg-green-100 text-green-700'
-                        }`}>
-                          {intent.urgency}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`px-2 py-1 text-xs rounded-full font-medium ${
-                          intent.status === 'New' ? 'bg-blue-100 text-blue-700' :
-                          intent.status === 'Valuation Sent' ? 'bg-purple-100 text-purple-700' :
-                          'bg-green-100 text-green-700'
-                        }`}>
-                          {intent.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-slate-500">{intent.createdAt}</td>
-                      <td className="px-6 py-4">
-                        <div className="flex gap-2">
-                          <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">View</button>
-                          <button className="text-purple-600 hover:text-purple-800 text-sm font-medium">📅 Schedule</button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+            </table>
           </div>
-        )}
+        </RegistrySection>
+
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+          <RegistrySection
+            title="Listing Board"
+            description="这里展示已经通过审核、允许进入公开市场视图的 listing。"
+          >
+            <div className="space-y-3">
+              {listingRecords.map((listing) => (
+                <div key={listing.id} className="rounded-2xl border border-slate-200 p-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <StatusPill>{getTradeModeLabel(listing.tradeMode)}</StatusPill>
+                    <StatusPill>{listing.sellerVerification}</StatusPill>
+                  </div>
+                  <p className="mt-3 font-semibold text-slate-900">
+                    {listing.companyName} · {listing.shareClass}
+                  </p>
+                  <p className="mt-1 text-sm text-slate-600">
+                    {listing.priceRangeLabel} · {listing.quantityRangeLabel}
+                  </p>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Seller alias {listing.sellerAlias} · bids {listing.activeBidCount} · matches{' '}
+                    {listing.activeMatchCount}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </RegistrySection>
+
+          <RegistrySection
+            title="Match Queue"
+            description="平台或 FA 在这里处理 bid/ask 匹配，然后推进 NDA、谈判和 deal 创建。"
+          >
+            <div className="space-y-3">
+              {orderMatches.map((match) => (
+                <div key={match.id} className="rounded-2xl border border-slate-200 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="font-semibold text-slate-900">
+                        {match.companyName} · {getTradeModeLabel(match.tradeMode)}
+                      </p>
+                      <p className="text-sm text-slate-500">
+                        {match.bidOrderId} ↔ {match.askOrderId}
+                      </p>
+                    </div>
+                    <StatusPill>{match.status}</StatusPill>
+                  </div>
+                  <p className="mt-3 text-sm text-slate-700">
+                    Match score {match.matchScore} · Lead FA {match.leadFaId}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </RegistrySection>
+        </div>
       </div>
     </DashboardLayout>
   );
+}
+
+function StatCard({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone: 'blue' | 'emerald' | 'slate' | 'purple';
+}) {
+  const colorMap = {
+    blue: 'text-blue-600',
+    emerald: 'text-emerald-600',
+    slate: 'text-slate-900',
+    purple: 'text-purple-600',
+  };
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5">
+      <p className="text-sm text-slate-500">{label}</p>
+      <p className={`mt-2 text-3xl font-bold ${colorMap[tone]}`}>{value}</p>
+    </div>
+  );
+}
+
+function RegistrySection({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+      <h2 className="text-xl font-bold text-slate-900">{title}</h2>
+      <p className="mt-2 text-sm text-slate-500">{description}</p>
+      <div className="mt-5">{children}</div>
+    </section>
+  );
+}
+
+function HeaderCell({ children }: { children: React.ReactNode }) {
+  return <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">{children}</th>;
+}
+
+function BodyCell({ children }: { children: React.ReactNode }) {
+  return <td className="px-4 py-4 text-sm text-slate-700">{children}</td>;
+}
+
+function StatusPill({ children }: { children: React.ReactNode }) {
+  return <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">{children}</span>;
 }

@@ -224,7 +224,7 @@ export default function HomePage() {
                     <span key={star} className="text-yellow-500">★</span>
                   ))}
                 </div>
-                <p className="text-slate-700 mb-6 leading-relaxed">"{testimonial.quote}"</p>
+                <p className="text-slate-700 mb-6 leading-relaxed">&ldquo;{testimonial.quote}&rdquo;</p>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold">
                     {testimonial.author.split(' ').map(n => n[0]).join('')}

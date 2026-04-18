@@ -15,7 +15,7 @@ const translations = {
     // Navigation
     'nav.home': 'Home',
     'nav.opportunities': 'Opportunities',
-    'nav.sell': 'Intent Registry',
+    'nav.sell': 'Bid / Ask Entry',
     'nav.about': 'About',
     'nav.contact': 'Contact',
     'nav.login': 'Log in',
@@ -442,7 +442,7 @@ const translations = {
     'faHub.back': 'Back',
     
     // Intent Registry Management
-    'intentReg.title': 'Intent Registry Management',
+    'intentReg.title': 'Bid / Ask Registry',
     'intentReg.subtitle': 'Trading Intent Registry - Manage buy and sell intentions',
     'intentReg.totalIntents': 'Total Intents',
     'intentReg.buyIntents': 'Buy Intents',
@@ -466,7 +466,7 @@ const translations = {
     // Navigation
     'nav.home': '首页',
     'nav.opportunities': '投资机会',
-    'nav.sell': '意向登记',
+    'nav.sell': 'Bid / Ask 入口',
     'nav.about': '关于我们',
     'nav.contact': '联系我们',
     'nav.login': '登录',
@@ -893,7 +893,7 @@ const translations = {
     'faHub.back': '返回',
     
     // Intent Registry Management
-    'intentReg.title': '意向登记管理',
+    'intentReg.title': 'Bid / Ask 注册表',
     'intentReg.subtitle': 'Trading Intent Registry - Manage buy and sell intentions',
     'intentReg.totalIntents': 'Total Intents',
     'intentReg.buyIntents': 'Buy Intents',
