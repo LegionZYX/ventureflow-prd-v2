@@ -1,9 +1,12 @@
-import type { NextConfig } from "next";
+import path from 'node:path';
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  // 禁用 Turbopack CSS 处理问题
   experimental: {
     optimizePackageImports: [],
+  },
+  turbopack: {
+    root: path.join(__dirname),
   },
 };
 

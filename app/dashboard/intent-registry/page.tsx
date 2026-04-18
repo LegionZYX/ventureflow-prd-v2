@@ -1,17 +1,24 @@
 'use client';
 
 import DashboardLayout from '@/components/DashboardLayout';
-import {
-  getAskRegistry,
-  getBidRegistry,
-  listingRecords,
-  orderMatches,
-  getTradeModeLabel,
-} from '@/lib/trading-v2';
+import { useTradingWorkspace } from '@/hooks/useTradingWorkspace';
+import { getAskRegistry, getBidRegistry, getTradeModeLabel } from '@/lib/trading-v2';
 
 export default function IntentRegistryPage() {
-  const bidRegistry = getBidRegistry();
-  const askRegistry = getAskRegistry();
+  const { error, loading, workspace } = useTradingWorkspace();
+
+  if (loading || !workspace) {
+    return (
+      <DashboardLayout>
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-500">
+          Loading bid and ask registry...
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  const bidRegistry = getBidRegistry(workspace);
+  const askRegistry = getAskRegistry(workspace);
 
   return (
     <DashboardLayout>
@@ -19,20 +26,21 @@ export default function IntentRegistryPage() {
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Bid / Ask Registry</h1>
           <p className="mt-2 text-slate-500">
-            管理端不再只看“意向登记”，而是看 PRD V2 里的 bid、ask、listing 和 match queue。
+            The registry now tracks company-level bids, asks, listings, and matches from a shared persisted data source.
           </p>
+          {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
         </div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
           <StatCard label="Bid Orders" value={String(bidRegistry.length)} tone="blue" />
           <StatCard label="Ask Orders" value={String(askRegistry.length)} tone="emerald" />
-          <StatCard label="Active Listings" value={String(listingRecords.length)} tone="slate" />
-          <StatCard label="Match Queue" value={String(orderMatches.length)} tone="purple" />
+          <StatCard label="Active Listings" value={String(workspace.listingRecords.length)} tone="slate" />
+          <StatCard label="Match Queue" value={String(workspace.orderMatches.length)} tone="purple" />
         </div>
 
         <RegistrySection
           title="Buyer Bid Orders"
-          description="必须经过 KYC 与 accredited investor guard 才能真正进入 active 状态。"
+          description="KYC and accredited-investor checks remain the hard gate before a bid becomes active."
         >
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -72,7 +80,7 @@ export default function IntentRegistryPage() {
 
         <RegistrySection
           title="Seller Ask Orders"
-          description="卖方 ask 必须经过 ownership review 和 transferability review 才能公开生成 listing。"
+          description="Ownership review and transferability review still determine whether an ask can enter the listing board."
         >
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -113,24 +121,23 @@ export default function IntentRegistryPage() {
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
           <RegistrySection
             title="Listing Board"
-            description="这里展示已经通过审核、允许进入公开市场视图的 listing。"
+            description="Approved asks flow into a company-facing board with seller privacy guard and disclosure level."
           >
             <div className="space-y-3">
-              {listingRecords.map((listing) => (
+              {workspace.listingRecords.map((listing) => (
                 <div key={listing.id} className="rounded-2xl border border-slate-200 p-4">
                   <div className="flex flex-wrap items-center gap-2">
                     <StatusPill>{getTradeModeLabel(listing.tradeMode)}</StatusPill>
                     <StatusPill>{listing.sellerVerification}</StatusPill>
                   </div>
                   <p className="mt-3 font-semibold text-slate-900">
-                    {listing.companyName} · {listing.shareClass}
+                    {listing.companyName} / {listing.shareClass}
                   </p>
                   <p className="mt-1 text-sm text-slate-600">
-                    {listing.priceRangeLabel} · {listing.quantityRangeLabel}
+                    {listing.priceRangeLabel} / {listing.quantityRangeLabel}
                   </p>
                   <p className="mt-1 text-sm text-slate-500">
-                    Seller alias {listing.sellerAlias} · bids {listing.activeBidCount} · matches{' '}
-                    {listing.activeMatchCount}
+                    Seller alias {listing.sellerAlias} / bids {listing.activeBidCount} / matches {listing.activeMatchCount}
                   </p>
                 </div>
               ))}
@@ -139,24 +146,24 @@ export default function IntentRegistryPage() {
 
           <RegistrySection
             title="Match Queue"
-            description="平台或 FA 在这里处理 bid/ask 匹配，然后推进 NDA、谈判和 deal 创建。"
+            description="Platform and FA can process bid/ask matches before moving the opportunity into NDA, negotiation, and deal creation."
           >
             <div className="space-y-3">
-              {orderMatches.map((match) => (
+              {workspace.orderMatches.map((match) => (
                 <div key={match.id} className="rounded-2xl border border-slate-200 p-4">
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <p className="font-semibold text-slate-900">
-                        {match.companyName} · {getTradeModeLabel(match.tradeMode)}
+                        {match.companyName} / {getTradeModeLabel(match.tradeMode)}
                       </p>
                       <p className="text-sm text-slate-500">
-                        {match.bidOrderId} ↔ {match.askOrderId}
+                        {match.bidOrderId} to {match.askOrderId}
                       </p>
                     </div>
                     <StatusPill>{match.status}</StatusPill>
                   </div>
                   <p className="mt-3 text-sm text-slate-700">
-                    Match score {match.matchScore} · Lead FA {match.leadFaId}
+                    Match score {match.matchScore} / Lead FA {match.leadFaId}
                   </p>
                 </div>
               ))}
@@ -211,7 +218,11 @@ function RegistrySection({
 }
 
 function HeaderCell({ children }: { children: React.ReactNode }) {
-  return <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">{children}</th>;
+  return (
+    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+      {children}
+    </th>
+  );
 }
 
 function BodyCell({ children }: { children: React.ReactNode }) {
@@ -219,5 +230,9 @@ function BodyCell({ children }: { children: React.ReactNode }) {
 }
 
 function StatusPill({ children }: { children: React.ReactNode }) {
-  return <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">{children}</span>;
+  return (
+    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
+      {children}
+    </span>
+  );
 }

@@ -1,26 +1,27 @@
 'use client';
 
-import { useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
-import { getPlatformAgreementBoard } from '@/lib/trading-v2';
+import { useTradingWorkspace } from '@/hooks/useTradingWorkspace';
 import {
-  advanceAgreementStatus,
   canAdvanceAgreement,
   getAgreementActionLabel,
 } from '@/lib/trading-v2-workflow';
+import { getPlatformAgreementBoard } from '@/lib/trading-v2';
 
 export default function AgreementsPage() {
-  const [agreements, setAgreements] = useState(getPlatformAgreementBoard());
+  const { error, isPending, loading, runAction, workspace } = useTradingWorkspace();
 
-  const advanceAgreement = (id: string) => {
-    setAgreements((current) =>
-      current.map((agreement) =>
-        agreement.id === id
-          ? { ...agreement, status: advanceAgreementStatus(agreement).status }
-          : agreement,
-      ),
+  if (loading || !workspace) {
+    return (
+      <DashboardLayout>
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-500">
+          Loading agreement board...
+        </div>
+      </DashboardLayout>
     );
-  };
+  }
+
+  const agreements = getPlatformAgreementBoard(workspace);
 
   return (
     <DashboardLayout>
@@ -28,8 +29,9 @@ export default function AgreementsPage() {
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Platform Agreements</h1>
           <p className="mt-2 text-slate-500">
-            业务规则已经统一：无论买方还是卖方，委托或费用相关协议都与平台签署；FA 推荐绑定不改变这一点。
+            Buyer and seller mandates remain platform contracts even when the opportunity originated from an FA recommendation.
           </p>
+          {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
         </div>
 
         <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
@@ -51,8 +53,8 @@ export default function AgreementsPage() {
           <StatCard
             label="Signed / Active"
             value={String(
-              agreements.filter(
-                (item) => item.status === 'SIGNED' || item.status === 'ACTIVE',
+              agreements.filter((item) =>
+                ['SIGNED', 'ACTIVE'].includes(item.status),
               ).length,
             )}
           />
@@ -92,8 +94,8 @@ export default function AgreementsPage() {
                     </BodyCell>
                     <BodyCell>
                       <button
-                        onClick={() => advanceAgreement(agreement.id)}
-                        disabled={!canAdvanceAgreement(agreement.status)}
+                        onClick={() => runAction('advanceAgreement', agreement.id)}
+                        disabled={!canAdvanceAgreement(agreement.status) || isPending}
                         className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
                       >
                         {getAgreementActionLabel(agreement.status)}
@@ -111,15 +113,15 @@ export default function AgreementsPage() {
           <div className="mt-5 grid gap-4 md:grid-cols-3">
             <RuleCard
               title="Buyer Side"
-              body="注册买方或推荐 prospect 一旦进入正式流程，签约对象都是平台，而不是 FA 个人。"
+              body="Registered buyers and bound prospects both sign with the platform once they enter formal execution."
             />
             <RuleCard
               title="Seller Side"
-              body="卖方 / GP 的挂单和成交委托同样与平台签署，FA 只承担撮合与执行职责。"
+              body="Seller and GP mandates stay with the platform even when FA teams handle sourcing and negotiation."
             />
             <RuleCard
               title="FA Referral"
-              body="FA 推荐绑定只决定来源归属和奖励计算，不改变买卖双方与平台签约的法律结构。"
+              body="FA recommendation records control attribution and rewards, not the legal counterparty of the contract."
             />
           </div>
         </section>
@@ -138,7 +140,11 @@ function StatCard({ label, value }: { label: string; value: string }) {
 }
 
 function HeaderCell({ children }: { children: React.ReactNode }) {
-  return <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">{children}</th>;
+  return (
+    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+      {children}
+    </th>
+  );
 }
 
 function BodyCell({ children }: { children: React.ReactNode }) {
@@ -146,7 +152,11 @@ function BodyCell({ children }: { children: React.ReactNode }) {
 }
 
 function StatusPill({ children }: { children: React.ReactNode }) {
-  return <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">{children}</span>;
+  return (
+    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
+      {children}
+    </span>
+  );
 }
 
 function RuleCard({ title, body }: { title: string; body: string }) {

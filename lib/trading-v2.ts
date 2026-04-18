@@ -21,18 +21,27 @@ export type AskStatus =
   | 'NEGOTIATING'
   | 'DEAL_CREATED'
   | 'WITHDRAWN';
-export type MatchStatus = 'NEW' | 'REVIEWING' | 'NDA_REQUIRED' | 'READY_FOR_NEGOTIATION' | 'CONVERTED';
+export type MatchStatus =
+  | 'NEW'
+  | 'REVIEWING'
+  | 'NDA_REQUIRED'
+  | 'READY_FOR_NEGOTIATION'
+  | 'CONVERTED';
 export type DealStage =
-  | '已上架'
-  | '洽谈中'
-  | 'LOI 已签署'
-  | '尽调中'
-  | '协议已签署'
-  | '资金托管中'
-  | '股权交割中'
-  | '待结算'
-  | '已完成';
-export type DisclosureStage = 'ANONYMOUS' | 'NDA_ONLY' | 'NEGOTIATION_SUMMARY' | 'LEGAL_DISCLOSURE';
+  | 'LISTED'
+  | 'NEGOTIATING'
+  | 'LOI_SIGNED'
+  | 'DILIGENCE'
+  | 'SPA_SIGNED'
+  | 'ESCROW_FUNDED'
+  | 'TRANSFER_IN_PROGRESS'
+  | 'SETTLEMENT_PENDING'
+  | 'COMPLETED';
+export type DisclosureStage =
+  | 'ANONYMOUS'
+  | 'NDA_ONLY'
+  | 'NEGOTIATION_SUMMARY'
+  | 'LEGAL_DISCLOSURE';
 
 export interface ParticipantProfile {
   id: string;
@@ -159,7 +168,13 @@ export interface FARecommendationLead {
   targetCompany: string;
   recommendedListingId: string;
   tradeMode: TradeMode;
-  status: 'PROSPECTED' | 'INTRO_SENT' | 'BOUND_TO_FA' | 'KYC_STARTED' | 'REGISTERED' | 'DEAL_LINKED';
+  status:
+    | 'PROSPECTED'
+    | 'INTRO_SENT'
+    | 'BOUND_TO_FA'
+    | 'KYC_STARTED'
+    | 'REGISTERED'
+    | 'DEAL_LINKED';
   rewardEligible: boolean;
   notes: string;
 }
@@ -188,530 +203,867 @@ export interface ReferralRewardRecord {
   status: 'PENDING' | 'APPROVED' | 'PAID';
 }
 
-export const participants: ParticipantProfile[] = [
-  {
-    id: 'buyer-citic',
-    displayName: 'CITIC Hong Kong',
-    role: 'BUYER',
-    entityType: 'INSTITUTION',
-    region: 'Hong Kong',
-    kycStatus: 'APPROVED',
-    qualified: true,
-    aumLabel: '$200M',
-    sourceOfFunds: 'Institutional treasury',
-  },
-  {
-    id: 'buyer-antalpha',
-    displayName: 'Antalpha Growth Desk',
-    role: 'BUYER',
-    entityType: 'INSTITUTION',
-    region: 'Singapore',
-    kycStatus: 'APPROVED',
-    qualified: true,
-    aumLabel: '$100M',
-    sourceOfFunds: 'Fund allocation',
-  },
-  {
-    id: 'buyer-li',
-    displayName: 'Li Ming Family Office',
-    role: 'BUYER',
-    entityType: 'FAMILY_OFFICE',
-    region: 'Shanghai',
-    kycStatus: 'IN_REVIEW',
-    qualified: false,
-    aumLabel: '$35M',
-    sourceOfFunds: 'Family office capital',
-  },
-  {
-    id: 'seller-bd-01',
-    displayName: 'Verified Seller BD-01',
-    role: 'SELLER',
-    entityType: 'INDIVIDUAL',
-    region: 'Beijing',
-    kycStatus: 'APPROVED',
-    qualified: true,
-  },
-  {
-    id: 'seller-bd-02',
-    displayName: 'Verified GP Byte Alpha',
-    role: 'SELLER',
-    entityType: 'GP',
-    region: 'Hong Kong',
-    kycStatus: 'APPROVED',
-    qualified: true,
-  },
-  {
-    id: 'fa-lead-01',
-    displayName: 'Lead FA Helen',
-    role: 'FA',
-    entityType: 'INSTITUTION',
-    region: 'Hong Kong',
-    kycStatus: 'APPROVED',
-    qualified: true,
-  },
-  {
-    id: 'fa-buyer-01',
-    displayName: 'Buyer FA Jason',
-    role: 'FA',
-    entityType: 'INSTITUTION',
-    region: 'Singapore',
-    kycStatus: 'APPROVED',
-    qualified: true,
-  },
-];
+export interface FAOnboardingApplication {
+  id: string;
+  faId: string;
+  legalName: string;
+  region: string;
+  qualificationDocsReady: boolean;
+  bankVerified: boolean;
+  trainingCompleted: boolean;
+  serviceAgreementSigned: boolean;
+  status:
+    | 'SUBMITTED'
+    | 'QUALIFICATION_REVIEW'
+    | 'BANK_PENDING'
+    | 'TRAINING_PENDING'
+    | 'ACTIVE';
+}
 
-export const buyerLeads: BuyerLead[] = [
-  {
-    id: 'lead-1',
-    buyerId: 'buyer-citic',
-    targetCompany: 'ByteDance',
-    preferredShareClass: 'Series H Common',
-    targetRaise: '$50M+',
-    timeline: 'Immediate',
-    accreditedInvestor: true,
-    status: 'QUALIFIED',
-  },
-  {
-    id: 'lead-2',
-    buyerId: 'buyer-antalpha',
-    targetCompany: 'ByteDance',
-    preferredShareClass: 'Employee Options',
-    targetRaise: '$5M-$20M',
-    timeline: '30 days',
-    accreditedInvestor: true,
-    status: 'CONTACTED',
-  },
-  {
-    id: 'lead-3',
-    buyerId: 'buyer-li',
-    targetCompany: 'SpaceX',
-    preferredShareClass: 'Series I',
-    targetRaise: '$1M-$5M',
-    timeline: '60 days',
-    accreditedInvestor: false,
-    status: 'NEW',
-  },
-];
+export interface CompanyRule {
+  id: string;
+  companyId: string;
+  companyName: string;
+  rofrRequired: boolean;
+  boardApprovalRequired: boolean;
+  transferWindow: string;
+  eligibleInvestorType: string;
+  sellerPrivacyGuard: 'STRICT' | 'CONTROLLED';
+}
 
-export const askOrders: AskOrder[] = [
-  {
-    id: 'ask-1',
-    sellerId: 'seller-bd-01',
-    sellerAlias: 'Seller-BD-01',
-    companyId: 'bytedance',
-    companyName: 'ByteDance',
-    tradeMode: 'L2',
-    shareClass: 'Series H Common',
-    quantityLabel: '300k shares',
-    askPriceLabel: '$162 - $168',
-    validityLabel: 'Valid for 30 days',
-    transferRestrictions: 'ROFR review required',
-    ownershipStatus: 'VERIFIED',
-    privacyLevel: 'PUBLIC_ANONYMOUS',
-    status: 'ACTIVE_LISTING',
-  },
-  {
-    id: 'ask-2',
-    sellerId: 'seller-bd-02',
-    sellerAlias: 'Seller-BD-GP',
-    companyId: 'bytedance',
-    companyName: 'ByteDance',
-    tradeMode: 'DIRECT',
-    shareClass: 'Employee Options',
-    quantityLabel: '80k options',
-    askPriceLabel: '$138 - $145',
-    validityLabel: 'Valid for 14 days',
-    transferRestrictions: 'Issuer consent required',
-    ownershipStatus: 'VERIFIED',
-    privacyLevel: 'CONTROLLED_DISCLOSURE',
-    status: 'MATCHED',
-  },
-  {
-    id: 'ask-3',
-    sellerId: 'seller-bd-02',
-    sellerAlias: 'Issuer-L1-Spot',
-    companyId: 'spacex',
-    companyName: 'SpaceX',
-    tradeMode: 'L1',
-    shareClass: 'Preferred Subscription',
-    quantityLabel: '$10M allocation',
-    askPriceLabel: 'At issuance terms',
-    validityLabel: 'Window closes in 10 days',
-    transferRestrictions: 'Issuer subscription memo',
-    ownershipStatus: 'PENDING',
-    privacyLevel: 'PUBLIC_ANONYMOUS',
-    status: 'TRANSFERABILITY_REVIEW',
-  },
-];
+export interface MarketSignal {
+  id: string;
+  companyId: string;
+  companyName: string;
+  referencePriceLabel: string;
+  lastTradeLabel: string;
+  bidCount: number;
+  askCount: number;
+  momentum: 'UP' | 'STABLE' | 'DOWN';
+}
 
-export const bidOrders: BidOrder[] = [
-  {
-    id: 'bid-1',
-    buyerId: 'buyer-citic',
-    companyId: 'bytedance',
-    companyName: 'ByteDance',
-    tradeMode: 'L2',
-    shareClass: 'Series H Common',
-    bidPriceLabel: '$165',
-    quantityLabel: '250k shares',
-    validUntil: '2026-05-10',
-    accreditedInvestor: true,
-    conditions: ['NDA signed', 'Data room access', 'Escrow in HKD'],
-    status: 'MATCHED',
-  },
-  {
-    id: 'bid-2',
-    buyerId: 'buyer-antalpha',
-    companyId: 'bytedance',
-    companyName: 'ByteDance',
-    tradeMode: 'DIRECT',
-    shareClass: 'Employee Options',
-    bidPriceLabel: '$142',
-    quantityLabel: '60k options',
-    validUntil: '2026-05-01',
-    accreditedInvestor: true,
-    conditions: ['Issuer approval', 'FA-led negotiation'],
-    status: 'NEGOTIATING',
-  },
-  {
-    id: 'bid-3',
-    buyerId: 'buyer-li',
-    companyId: 'spacex',
-    companyName: 'SpaceX',
-    tradeMode: 'L1',
-    shareClass: 'Preferred Subscription',
-    bidPriceLabel: '$2M ticket',
-    quantityLabel: '$2M subscription',
-    validUntil: '2026-05-15',
-    accreditedInvestor: false,
-    conditions: ['KYC approval pending'],
-    status: 'COMPLIANCE_REVIEW',
-  },
-];
+export interface OrderBookEntry {
+  id: string;
+  companyId: string;
+  companyName: string;
+  side: 'BID' | 'ASK';
+  tradeMode: TradeMode;
+  priceLabel: string;
+  quantityLabel: string;
+  visibility: 'PUBLIC' | 'NDA_ONLY';
+  status: 'ACTIVE' | 'EXPIRING_SOON' | 'EXPIRED';
+}
 
-export const listingRecords: ListingRecord[] = [
-  {
-    id: 'listing-1',
-    askOrderId: 'ask-1',
-    companyId: 'bytedance',
-    companyName: 'ByteDance',
-    tradeMode: 'L2',
-    shareClass: 'Series H Common',
-    priceRangeLabel: '$162 - $168',
-    quantityRangeLabel: '200k - 300k shares',
-    sellerAlias: 'Seller-BD-01',
-    sellerVerification: 'VERIFIED',
-    disclosureStage: 'ANONYMOUS',
-    activeBidCount: 3,
-    activeMatchCount: 1,
-    status: 'ACTIVE',
-  },
-  {
-    id: 'listing-2',
-    askOrderId: 'ask-2',
-    companyId: 'bytedance',
-    companyName: 'ByteDance',
-    tradeMode: 'DIRECT',
-    shareClass: 'Employee Options',
-    priceRangeLabel: '$138 - $145',
-    quantityRangeLabel: '40k - 80k options',
-    sellerAlias: 'Seller-BD-GP',
-    sellerVerification: 'VERIFIED',
-    disclosureStage: 'NDA_ONLY',
-    activeBidCount: 1,
-    activeMatchCount: 1,
-    status: 'ACTIVE',
-  },
-];
+export interface NegotiationRecord {
+  id: string;
+  dealId: string;
+  companyName: string;
+  channel: 'CALL' | 'MEETING' | 'COUNTER_OFFER';
+  summary: string;
+  priceSnapshotLabel: string;
+  owner: string;
+  status: 'OPEN' | 'LOCKED';
+}
 
-export const orderMatches: OrderMatch[] = [
-  {
-    id: 'match-1',
-    bidOrderId: 'bid-1',
-    askOrderId: 'ask-1',
-    companyName: 'ByteDance',
-    tradeMode: 'L2',
-    matchScore: 94,
-    status: 'READY_FOR_NEGOTIATION',
-    leadFaId: 'fa-lead-01',
-  },
-  {
-    id: 'match-2',
-    bidOrderId: 'bid-2',
-    askOrderId: 'ask-2',
-    companyName: 'ByteDance',
-    tradeMode: 'DIRECT',
-    matchScore: 88,
-    status: 'NDA_REQUIRED',
-    leadFaId: 'fa-buyer-01',
-  },
-];
+export interface TransferApproval {
+  id: string;
+  dealId: string;
+  companyName: string;
+  approvalType: 'ROFR' | 'ISSUER_CONSENT' | 'BOARD_APPROVAL';
+  owner: string;
+  status: 'PENDING' | 'ISSUER_REVIEW' | 'ROFR_WINDOW' | 'APPROVED' | 'REJECTED';
+}
 
-export const faTeams: FATeam[] = [
-  {
-    id: 'fa-team-1',
-    name: 'ByteDance Core Team',
-    status: 'ACTIVE',
-    members: [
-      { faId: 'fa-lead-01', name: 'Helen', role: 'LEAD_FA', commissionRatio: 0.25 },
-      { faId: 'fa-buyer-01', name: 'Jason', role: 'BUYER_FA', commissionRatio: 0.22 },
-      { faId: 'fa-seller-01', name: 'Ava', role: 'SELLER_FA', commissionRatio: 0.22 },
-      { faId: 'fa-neg-01', name: 'Chris', role: 'NEGOTIATOR', commissionRatio: 0.18 },
-      { faId: 'fa-exec-01', name: 'Mina', role: 'EXECUTOR', commissionRatio: 0.13 },
-    ],
-  },
-];
+export interface EscrowRecord {
+  id: string;
+  dealId: string;
+  companyName: string;
+  accountLabel: string;
+  amountLabel: string;
+  status: 'DRAFT' | 'AWAITING_FUNDS' | 'FUNDED' | 'FROZEN' | 'RELEASED';
+  paymentProofReady: boolean;
+}
 
-export const faRecommendationLeads: FARecommendationLead[] = [
-  {
-    id: 'rec-1',
-    faId: 'fa-buyer-01',
-    faName: 'Jason',
-    prospectName: 'Atlas Family Office',
-    prospectCompany: 'Atlas Capital',
-    prospectEmail: 'atlas@sample.com',
-    targetCompany: 'ByteDance',
-    recommendedListingId: 'listing-1',
-    tradeMode: 'L2',
-    status: 'BOUND_TO_FA',
-    rewardEligible: true,
-    notes: 'FA sourced prospect before platform registration and introduced ByteDance L2 block.',
-  },
-  {
-    id: 'rec-2',
-    faId: 'fa-lead-01',
-    faName: 'Helen',
-    prospectName: 'NorthBridge Ventures',
-    prospectCompany: 'NorthBridge',
-    prospectEmail: 'northbridge@sample.com',
-    targetCompany: 'ByteDance',
-    recommendedListingId: 'listing-2',
-    tradeMode: 'DIRECT',
-    status: 'DEAL_LINKED',
-    rewardEligible: true,
-    notes: 'Prospect accepted recommendation, completed onboarding, and linked into direct negotiation.',
-  },
-  {
-    id: 'rec-3',
-    faId: 'fa-buyer-01',
-    faName: 'Jason',
-    prospectName: 'Summit PE',
-    prospectCompany: 'Summit Partners',
-    prospectEmail: 'summit@sample.com',
-    targetCompany: 'ByteDance',
-    recommendedListingId: 'listing-1',
-    tradeMode: 'L2',
-    status: 'INTRO_SENT',
-    rewardEligible: false,
-    notes: 'Still unregistered, waiting for KYC start.',
-  },
-];
+export interface DashboardTask {
+  id: string;
+  companyName: string;
+  owner: string;
+  title: string;
+  dueLabel: string;
+  status: 'OPEN' | 'IN_PROGRESS' | 'DONE';
+  relatedEntity: 'KYC' | 'ASK' | 'DEAL' | 'ESCROW' | 'APPROVAL';
+}
 
-export const dealRecords: DealRecord[] = [
-  {
-    id: 'deal-1',
-    listingId: 'listing-1',
-    bidOrderId: 'bid-1',
-    askOrderId: 'ask-1',
-    companyName: 'ByteDance',
-    tradeMode: 'L2',
-    shareClass: 'Series H Common',
-    amountLabel: '$41.2M',
-    currentStage: '尽调中',
-    disclosureStage: 'NEGOTIATION_SUMMARY',
-    loiSigned: true,
-    dataRoomReady: true,
-    escrowReady: false,
-    settlementReady: false,
-    leadFaTeamId: 'fa-team-1',
-  },
-  {
-    id: 'deal-2',
-    listingId: 'listing-2',
-    bidOrderId: 'bid-2',
-    askOrderId: 'ask-2',
-    companyName: 'ByteDance',
-    tradeMode: 'DIRECT',
-    shareClass: 'Employee Options',
-    amountLabel: '$8.5M',
-    currentStage: '协议已签署',
-    disclosureStage: 'LEGAL_DISCLOSURE',
-    loiSigned: true,
-    dataRoomReady: true,
-    escrowReady: true,
-    settlementReady: false,
-    leadFaTeamId: 'fa-team-1',
-  },
-];
-
-export const platformMandateAgreements: PlatformMandateAgreement[] = [
-  {
-    id: 'agreement-1',
-    side: 'BUYER',
-    principalName: 'CITIC Hong Kong',
-    principalType: 'REGISTERED_BUYER',
-    relatedDealId: 'deal-1',
-    contractWith: 'PLATFORM',
-    agreementType: 'BUYER_MANDATE',
-    status: 'SIGNED',
-    signedDate: '2026-04-03',
-  },
-  {
-    id: 'agreement-2',
-    side: 'SELLER',
-    principalName: 'Seller-BD-01',
-    principalType: 'SELLER',
-    relatedDealId: 'deal-1',
-    contractWith: 'PLATFORM',
-    agreementType: 'SELLER_MANDATE',
-    status: 'ACTIVE',
-    signedDate: '2026-03-28',
-  },
-  {
-    id: 'agreement-3',
-    side: 'BUYER',
-    principalName: 'NorthBridge Ventures',
-    principalType: 'UNREGISTERED_PROSPECT',
-    relatedDealId: 'deal-2',
-    relatedRecommendationId: 'rec-2',
-    contractWith: 'PLATFORM',
-    agreementType: 'PLATFORM_FEE_AGREEMENT',
-    status: 'PENDING_SIGNATURE',
-    signedDate: '2026-04-15',
-  },
-  {
-    id: 'agreement-4',
-    side: 'SELLER',
-    principalName: 'Seller-BD-GP',
-    principalType: 'GP',
-    relatedDealId: 'deal-2',
-    contractWith: 'PLATFORM',
-    agreementType: 'SELLER_MANDATE',
-    status: 'SIGNED',
-    signedDate: '2026-04-11',
-  },
-];
-
-export const referralRewardRecords: ReferralRewardRecord[] = [
-  {
-    id: 'reward-1',
-    recommendationId: 'rec-2',
-    faId: 'fa-lead-01',
-    relatedDealId: 'deal-2',
-    trigger: 'SETTLEMENT_COMPLETE',
-    rewardType: 'FA_RECOMMENDATION_BONUS',
-    amountLabel: '$96K',
-    status: 'PENDING',
-  },
-  {
-    id: 'reward-2',
-    recommendationId: 'rec-1',
-    faId: 'fa-buyer-01',
-    relatedDealId: 'deal-1',
-    trigger: 'DEAL_SIGNED',
-    rewardType: 'FA_RECOMMENDATION_BONUS',
-    amountLabel: '$140K',
-    status: 'APPROVED',
-  },
-];
+export interface TradingWorkspace {
+  participants: ParticipantProfile[];
+  buyerLeads: BuyerLead[];
+  askOrders: AskOrder[];
+  bidOrders: BidOrder[];
+  listingRecords: ListingRecord[];
+  orderMatches: OrderMatch[];
+  faTeams: FATeam[];
+  dealRecords: DealRecord[];
+  faRecommendationLeads: FARecommendationLead[];
+  platformMandateAgreements: PlatformMandateAgreement[];
+  referralRewardRecords: ReferralRewardRecord[];
+  faOnboardingApplications: FAOnboardingApplication[];
+  companyRules: CompanyRule[];
+  marketSignals: MarketSignal[];
+  orderBookEntries: OrderBookEntry[];
+  negotiationRecords: NegotiationRecord[];
+  transferApprovals: TransferApproval[];
+  escrowRecords: EscrowRecord[];
+  dashboardTasks: DashboardTask[];
+}
 
 export const dealStages: DealStage[] = [
-  '已上架',
-  '洽谈中',
-  'LOI 已签署',
-  '尽调中',
-  '协议已签署',
-  '资金托管中',
-  '股权交割中',
-  '待结算',
-  '已完成',
+  'LISTED',
+  'NEGOTIATING',
+  'LOI_SIGNED',
+  'DILIGENCE',
+  'SPA_SIGNED',
+  'ESCROW_FUNDED',
+  'TRANSFER_IN_PROGRESS',
+  'SETTLEMENT_PENDING',
+  'COMPLETED',
 ];
 
-export function getParticipantById(id: string) {
-  return participants.find((participant) => participant.id === id);
+export const seedTradingWorkspace = createSeedTradingWorkspace();
+export const participants = seedTradingWorkspace.participants;
+export const buyerLeads = seedTradingWorkspace.buyerLeads;
+export const askOrders = seedTradingWorkspace.askOrders;
+export const bidOrders = seedTradingWorkspace.bidOrders;
+export const listingRecords = seedTradingWorkspace.listingRecords;
+export const orderMatches = seedTradingWorkspace.orderMatches;
+export const faTeams = seedTradingWorkspace.faTeams;
+export const dealRecords = seedTradingWorkspace.dealRecords;
+export const faRecommendationLeads = seedTradingWorkspace.faRecommendationLeads;
+export const platformMandateAgreements = seedTradingWorkspace.platformMandateAgreements;
+export const referralRewardRecords = seedTradingWorkspace.referralRewardRecords;
+
+export function createSeedTradingWorkspace(): TradingWorkspace {
+  return {
+    participants: [
+      {
+        id: 'buyer-citic',
+        displayName: 'CITIC Hong Kong',
+        role: 'BUYER',
+        entityType: 'INSTITUTION',
+        region: 'Hong Kong',
+        kycStatus: 'APPROVED',
+        qualified: true,
+        aumLabel: '$200M',
+        sourceOfFunds: 'Institutional treasury',
+      },
+      {
+        id: 'buyer-antalpha',
+        displayName: 'Antalpha Growth Desk',
+        role: 'BUYER',
+        entityType: 'INSTITUTION',
+        region: 'Singapore',
+        kycStatus: 'APPROVED',
+        qualified: true,
+        aumLabel: '$100M',
+        sourceOfFunds: 'Fund allocation',
+      },
+      {
+        id: 'buyer-li',
+        displayName: 'Li Ming Family Office',
+        role: 'BUYER',
+        entityType: 'FAMILY_OFFICE',
+        region: 'Shanghai',
+        kycStatus: 'IN_REVIEW',
+        qualified: false,
+        aumLabel: '$35M',
+        sourceOfFunds: 'Family office capital',
+      },
+      {
+        id: 'seller-bd-01',
+        displayName: 'Verified Seller BD-01',
+        role: 'SELLER',
+        entityType: 'INDIVIDUAL',
+        region: 'Beijing',
+        kycStatus: 'APPROVED',
+        qualified: true,
+      },
+      {
+        id: 'seller-bd-02',
+        displayName: 'Verified GP Byte Alpha',
+        role: 'SELLER',
+        entityType: 'GP',
+        region: 'Hong Kong',
+        kycStatus: 'APPROVED',
+        qualified: true,
+      },
+      {
+        id: 'fa-lead-01',
+        displayName: 'Lead FA Helen',
+        role: 'FA',
+        entityType: 'INSTITUTION',
+        region: 'Hong Kong',
+        kycStatus: 'APPROVED',
+        qualified: true,
+      },
+      {
+        id: 'fa-buyer-01',
+        displayName: 'Buyer FA Jason',
+        role: 'FA',
+        entityType: 'INSTITUTION',
+        region: 'Singapore',
+        kycStatus: 'APPROVED',
+        qualified: true,
+      },
+    ],
+    buyerLeads: [
+      {
+        id: 'lead-1',
+        buyerId: 'buyer-citic',
+        targetCompany: 'ByteDance',
+        preferredShareClass: 'Series H Common',
+        targetRaise: '$50M+',
+        timeline: 'Immediate',
+        accreditedInvestor: true,
+        status: 'QUALIFIED',
+      },
+      {
+        id: 'lead-2',
+        buyerId: 'buyer-antalpha',
+        targetCompany: 'ByteDance',
+        preferredShareClass: 'Employee Options',
+        targetRaise: '$5M-$20M',
+        timeline: '30 days',
+        accreditedInvestor: true,
+        status: 'CONTACTED',
+      },
+      {
+        id: 'lead-3',
+        buyerId: 'buyer-li',
+        targetCompany: 'SpaceX',
+        preferredShareClass: 'Series I',
+        targetRaise: '$1M-$5M',
+        timeline: '60 days',
+        accreditedInvestor: false,
+        status: 'NEW',
+      },
+    ],
+    askOrders: [
+      {
+        id: 'ask-1',
+        sellerId: 'seller-bd-01',
+        sellerAlias: 'Seller-BD-01',
+        companyId: 'bytedance',
+        companyName: 'ByteDance',
+        tradeMode: 'L2',
+        shareClass: 'Series H Common',
+        quantityLabel: '300k shares',
+        askPriceLabel: '$162 - $168',
+        validityLabel: 'Valid for 30 days',
+        transferRestrictions: 'ROFR review required',
+        ownershipStatus: 'VERIFIED',
+        privacyLevel: 'PUBLIC_ANONYMOUS',
+        status: 'ACTIVE_LISTING',
+      },
+      {
+        id: 'ask-2',
+        sellerId: 'seller-bd-02',
+        sellerAlias: 'Seller-BD-GP',
+        companyId: 'bytedance',
+        companyName: 'ByteDance',
+        tradeMode: 'DIRECT',
+        shareClass: 'Employee Options',
+        quantityLabel: '80k options',
+        askPriceLabel: '$138 - $145',
+        validityLabel: 'Valid for 14 days',
+        transferRestrictions: 'Issuer consent required',
+        ownershipStatus: 'VERIFIED',
+        privacyLevel: 'CONTROLLED_DISCLOSURE',
+        status: 'MATCHED',
+      },
+      {
+        id: 'ask-3',
+        sellerId: 'seller-bd-02',
+        sellerAlias: 'Issuer-L1-Spot',
+        companyId: 'spacex',
+        companyName: 'SpaceX',
+        tradeMode: 'L1',
+        shareClass: 'Preferred Subscription',
+        quantityLabel: '$10M allocation',
+        askPriceLabel: 'At issuance terms',
+        validityLabel: 'Window closes in 10 days',
+        transferRestrictions: 'Issuer subscription memo',
+        ownershipStatus: 'PENDING',
+        privacyLevel: 'PUBLIC_ANONYMOUS',
+        status: 'TRANSFERABILITY_REVIEW',
+      },
+    ],
+    bidOrders: [
+      {
+        id: 'bid-1',
+        buyerId: 'buyer-citic',
+        companyId: 'bytedance',
+        companyName: 'ByteDance',
+        tradeMode: 'L2',
+        shareClass: 'Series H Common',
+        bidPriceLabel: '$165',
+        quantityLabel: '250k shares',
+        validUntil: '2026-05-10',
+        accreditedInvestor: true,
+        conditions: ['NDA signed', 'Data room access', 'Escrow in HKD'],
+        status: 'MATCHED',
+      },
+      {
+        id: 'bid-2',
+        buyerId: 'buyer-antalpha',
+        companyId: 'bytedance',
+        companyName: 'ByteDance',
+        tradeMode: 'DIRECT',
+        shareClass: 'Employee Options',
+        bidPriceLabel: '$142',
+        quantityLabel: '60k options',
+        validUntil: '2026-05-01',
+        accreditedInvestor: true,
+        conditions: ['Issuer approval', 'FA-led negotiation'],
+        status: 'NEGOTIATING',
+      },
+      {
+        id: 'bid-3',
+        buyerId: 'buyer-li',
+        companyId: 'spacex',
+        companyName: 'SpaceX',
+        tradeMode: 'L1',
+        shareClass: 'Preferred Subscription',
+        bidPriceLabel: '$2M ticket',
+        quantityLabel: '$2M subscription',
+        validUntil: '2026-05-15',
+        accreditedInvestor: false,
+        conditions: ['KYC approval pending'],
+        status: 'COMPLIANCE_REVIEW',
+      },
+    ],
+    listingRecords: [
+      {
+        id: 'listing-1',
+        askOrderId: 'ask-1',
+        companyId: 'bytedance',
+        companyName: 'ByteDance',
+        tradeMode: 'L2',
+        shareClass: 'Series H Common',
+        priceRangeLabel: '$162 - $168',
+        quantityRangeLabel: '200k - 300k shares',
+        sellerAlias: 'Seller-BD-01',
+        sellerVerification: 'VERIFIED',
+        disclosureStage: 'ANONYMOUS',
+        activeBidCount: 3,
+        activeMatchCount: 1,
+        status: 'ACTIVE',
+      },
+      {
+        id: 'listing-2',
+        askOrderId: 'ask-2',
+        companyId: 'bytedance',
+        companyName: 'ByteDance',
+        tradeMode: 'DIRECT',
+        shareClass: 'Employee Options',
+        priceRangeLabel: '$138 - $145',
+        quantityRangeLabel: '40k - 80k options',
+        sellerAlias: 'Seller-BD-GP',
+        sellerVerification: 'VERIFIED',
+        disclosureStage: 'NDA_ONLY',
+        activeBidCount: 1,
+        activeMatchCount: 1,
+        status: 'ACTIVE',
+      },
+    ],
+    orderMatches: [
+      {
+        id: 'match-1',
+        bidOrderId: 'bid-1',
+        askOrderId: 'ask-1',
+        companyName: 'ByteDance',
+        tradeMode: 'L2',
+        matchScore: 94,
+        status: 'READY_FOR_NEGOTIATION',
+        leadFaId: 'fa-lead-01',
+      },
+      {
+        id: 'match-2',
+        bidOrderId: 'bid-2',
+        askOrderId: 'ask-2',
+        companyName: 'ByteDance',
+        tradeMode: 'DIRECT',
+        matchScore: 88,
+        status: 'NDA_REQUIRED',
+        leadFaId: 'fa-buyer-01',
+      },
+    ],
+    faTeams: [
+      {
+        id: 'fa-team-1',
+        name: 'ByteDance Core Team',
+        status: 'ACTIVE',
+        members: [
+          { faId: 'fa-lead-01', name: 'Helen', role: 'LEAD_FA', commissionRatio: 0.25 },
+          { faId: 'fa-buyer-01', name: 'Jason', role: 'BUYER_FA', commissionRatio: 0.22 },
+          { faId: 'fa-seller-01', name: 'Ava', role: 'SELLER_FA', commissionRatio: 0.22 },
+          { faId: 'fa-neg-01', name: 'Chris', role: 'NEGOTIATOR', commissionRatio: 0.18 },
+          { faId: 'fa-exec-01', name: 'Mina', role: 'EXECUTOR', commissionRatio: 0.13 },
+        ],
+      },
+    ],
+    dealRecords: [
+      {
+        id: 'deal-1',
+        listingId: 'listing-1',
+        bidOrderId: 'bid-1',
+        askOrderId: 'ask-1',
+        companyName: 'ByteDance',
+        tradeMode: 'L2',
+        shareClass: 'Series H Common',
+        amountLabel: '$41.2M',
+        currentStage: 'DILIGENCE',
+        disclosureStage: 'NEGOTIATION_SUMMARY',
+        loiSigned: true,
+        dataRoomReady: true,
+        escrowReady: false,
+        settlementReady: false,
+        leadFaTeamId: 'fa-team-1',
+      },
+      {
+        id: 'deal-2',
+        listingId: 'listing-2',
+        bidOrderId: 'bid-2',
+        askOrderId: 'ask-2',
+        companyName: 'ByteDance',
+        tradeMode: 'DIRECT',
+        shareClass: 'Employee Options',
+        amountLabel: '$8.5M',
+        currentStage: 'SPA_SIGNED',
+        disclosureStage: 'LEGAL_DISCLOSURE',
+        loiSigned: true,
+        dataRoomReady: true,
+        escrowReady: true,
+        settlementReady: false,
+        leadFaTeamId: 'fa-team-1',
+      },
+    ],
+    faRecommendationLeads: [
+      {
+        id: 'rec-1',
+        faId: 'fa-buyer-01',
+        faName: 'Jason',
+        prospectName: 'Atlas Family Office',
+        prospectCompany: 'Atlas Capital',
+        prospectEmail: 'atlas@sample.com',
+        targetCompany: 'ByteDance',
+        recommendedListingId: 'listing-1',
+        tradeMode: 'L2',
+        status: 'BOUND_TO_FA',
+        rewardEligible: true,
+        notes:
+          'FA sourced prospect before platform registration and introduced ByteDance L2 block.',
+      },
+      {
+        id: 'rec-2',
+        faId: 'fa-lead-01',
+        faName: 'Helen',
+        prospectName: 'NorthBridge Ventures',
+        prospectCompany: 'NorthBridge',
+        prospectEmail: 'northbridge@sample.com',
+        targetCompany: 'ByteDance',
+        recommendedListingId: 'listing-2',
+        tradeMode: 'DIRECT',
+        status: 'DEAL_LINKED',
+        rewardEligible: true,
+        notes:
+          'Prospect accepted recommendation, completed onboarding, and linked into direct negotiation.',
+      },
+      {
+        id: 'rec-3',
+        faId: 'fa-buyer-01',
+        faName: 'Jason',
+        prospectName: 'Summit PE',
+        prospectCompany: 'Summit Partners',
+        prospectEmail: 'summit@sample.com',
+        targetCompany: 'ByteDance',
+        recommendedListingId: 'listing-1',
+        tradeMode: 'L2',
+        status: 'INTRO_SENT',
+        rewardEligible: false,
+        notes: 'Still unregistered, waiting for KYC start.',
+      },
+    ],
+    platformMandateAgreements: [
+      {
+        id: 'agreement-1',
+        side: 'BUYER',
+        principalName: 'CITIC Hong Kong',
+        principalType: 'REGISTERED_BUYER',
+        relatedDealId: 'deal-1',
+        contractWith: 'PLATFORM',
+        agreementType: 'BUYER_MANDATE',
+        status: 'SIGNED',
+        signedDate: '2026-04-03',
+      },
+      {
+        id: 'agreement-2',
+        side: 'SELLER',
+        principalName: 'Seller-BD-01',
+        principalType: 'SELLER',
+        relatedDealId: 'deal-1',
+        contractWith: 'PLATFORM',
+        agreementType: 'SELLER_MANDATE',
+        status: 'ACTIVE',
+        signedDate: '2026-03-28',
+      },
+      {
+        id: 'agreement-3',
+        side: 'BUYER',
+        principalName: 'NorthBridge Ventures',
+        principalType: 'UNREGISTERED_PROSPECT',
+        relatedDealId: 'deal-2',
+        relatedRecommendationId: 'rec-2',
+        contractWith: 'PLATFORM',
+        agreementType: 'PLATFORM_FEE_AGREEMENT',
+        status: 'PENDING_SIGNATURE',
+        signedDate: '2026-04-15',
+      },
+      {
+        id: 'agreement-4',
+        side: 'SELLER',
+        principalName: 'Seller-BD-GP',
+        principalType: 'GP',
+        relatedDealId: 'deal-2',
+        contractWith: 'PLATFORM',
+        agreementType: 'SELLER_MANDATE',
+        status: 'SIGNED',
+        signedDate: '2026-04-11',
+      },
+    ],
+    referralRewardRecords: [
+      {
+        id: 'reward-1',
+        recommendationId: 'rec-2',
+        faId: 'fa-lead-01',
+        relatedDealId: 'deal-2',
+        trigger: 'SETTLEMENT_COMPLETE',
+        rewardType: 'FA_RECOMMENDATION_BONUS',
+        amountLabel: '$96K',
+        status: 'PENDING',
+      },
+      {
+        id: 'reward-2',
+        recommendationId: 'rec-1',
+        faId: 'fa-buyer-01',
+        relatedDealId: 'deal-1',
+        trigger: 'DEAL_SIGNED',
+        rewardType: 'FA_RECOMMENDATION_BONUS',
+        amountLabel: '$140K',
+        status: 'APPROVED',
+      },
+    ],
+    faOnboardingApplications: [
+      {
+        id: 'fa-app-1',
+        faId: 'fa-lead-01',
+        legalName: 'Helen Advisory Limited',
+        region: 'Hong Kong',
+        qualificationDocsReady: true,
+        bankVerified: true,
+        trainingCompleted: false,
+        serviceAgreementSigned: true,
+        status: 'TRAINING_PENDING',
+      },
+      {
+        id: 'fa-app-2',
+        faId: 'fa-buyer-01',
+        legalName: 'Jason Capital Partners',
+        region: 'Singapore',
+        qualificationDocsReady: true,
+        bankVerified: false,
+        trainingCompleted: false,
+        serviceAgreementSigned: true,
+        status: 'BANK_PENDING',
+      },
+    ],
+    companyRules: [
+      {
+        id: 'rule-1',
+        companyId: 'bytedance',
+        companyName: 'ByteDance',
+        rofrRequired: true,
+        boardApprovalRequired: true,
+        transferWindow: 'Quarter-end transfer window',
+        eligibleInvestorType: 'Accredited institutional or qualified family office',
+        sellerPrivacyGuard: 'STRICT',
+      },
+      {
+        id: 'rule-2',
+        companyId: 'spacex',
+        companyName: 'SpaceX',
+        rofrRequired: false,
+        boardApprovalRequired: true,
+        transferWindow: 'Issuer memo allocation cycle',
+        eligibleInvestorType: 'Qualified placement investor',
+        sellerPrivacyGuard: 'CONTROLLED',
+      },
+    ],
+    marketSignals: [
+      {
+        id: 'signal-1',
+        companyId: 'bytedance',
+        companyName: 'ByteDance',
+        referencePriceLabel: '$164 reference',
+        lastTradeLabel: '$163.5 matched last week',
+        bidCount: 4,
+        askCount: 2,
+        momentum: 'UP',
+      },
+      {
+        id: 'signal-2',
+        companyId: 'spacex',
+        companyName: 'SpaceX',
+        referencePriceLabel: '$2M min ticket',
+        lastTradeLabel: 'No recent public match',
+        bidCount: 1,
+        askCount: 1,
+        momentum: 'STABLE',
+      },
+    ],
+    orderBookEntries: [
+      {
+        id: 'book-1',
+        companyId: 'bytedance',
+        companyName: 'ByteDance',
+        side: 'BID',
+        tradeMode: 'L2',
+        priceLabel: '$165',
+        quantityLabel: '250k shares',
+        visibility: 'PUBLIC',
+        status: 'ACTIVE',
+      },
+      {
+        id: 'book-2',
+        companyId: 'bytedance',
+        companyName: 'ByteDance',
+        side: 'ASK',
+        tradeMode: 'L2',
+        priceLabel: '$166',
+        quantityLabel: '200k shares',
+        visibility: 'PUBLIC',
+        status: 'EXPIRING_SOON',
+      },
+      {
+        id: 'book-3',
+        companyId: 'bytedance',
+        companyName: 'ByteDance',
+        side: 'ASK',
+        tradeMode: 'DIRECT',
+        priceLabel: '$142',
+        quantityLabel: '60k options',
+        visibility: 'NDA_ONLY',
+        status: 'ACTIVE',
+      },
+    ],
+    negotiationRecords: [
+      {
+        id: 'neg-1',
+        dealId: 'deal-1',
+        companyName: 'ByteDance',
+        channel: 'MEETING',
+        summary: 'Lead FA confirmed diligence package and narrowed price band to $164-$165.',
+        priceSnapshotLabel: '$164.5 midpoint',
+        owner: 'Helen',
+        status: 'LOCKED',
+      },
+      {
+        id: 'neg-2',
+        dealId: 'deal-2',
+        companyName: 'ByteDance',
+        channel: 'COUNTER_OFFER',
+        summary: 'Buyer requested revised vesting treatment before SPA signature.',
+        priceSnapshotLabel: '$142 direct option block',
+        owner: 'Jason',
+        status: 'OPEN',
+      },
+    ],
+    transferApprovals: [
+      {
+        id: 'approval-1',
+        dealId: 'deal-1',
+        companyName: 'ByteDance',
+        approvalType: 'ROFR',
+        owner: 'Platform legal',
+        status: 'ROFR_WINDOW',
+      },
+      {
+        id: 'approval-2',
+        dealId: 'deal-2',
+        companyName: 'ByteDance',
+        approvalType: 'ISSUER_CONSENT',
+        owner: 'Issuer liaison',
+        status: 'ISSUER_REVIEW',
+      },
+    ],
+    escrowRecords: [
+      {
+        id: 'escrow-1',
+        dealId: 'deal-1',
+        companyName: 'ByteDance',
+        accountLabel: 'HSBC escrow / HKD',
+        amountLabel: '$41.2M',
+        status: 'AWAITING_FUNDS',
+        paymentProofReady: false,
+      },
+      {
+        id: 'escrow-2',
+        dealId: 'deal-2',
+        companyName: 'ByteDance',
+        accountLabel: 'DBS escrow / SGD',
+        amountLabel: '$8.5M',
+        status: 'FUNDED',
+        paymentProofReady: true,
+      },
+    ],
+    dashboardTasks: [
+      {
+        id: 'task-1',
+        companyName: 'ByteDance',
+        owner: 'Ops',
+        title: 'Finish seller ownership evidence review',
+        dueLabel: 'Today',
+        status: 'OPEN',
+        relatedEntity: 'ASK',
+      },
+      {
+        id: 'task-2',
+        companyName: 'ByteDance',
+        owner: 'Legal',
+        title: 'Open ROFR notice package for deal-1',
+        dueLabel: 'Tomorrow',
+        status: 'IN_PROGRESS',
+        relatedEntity: 'APPROVAL',
+      },
+      {
+        id: 'task-3',
+        companyName: 'ByteDance',
+        owner: 'Finance',
+        title: 'Verify incoming escrow wire for deal-1',
+        dueLabel: 'This week',
+        status: 'OPEN',
+        relatedEntity: 'ESCROW',
+      },
+    ],
+  };
 }
 
-export function getActiveListings() {
-  return listingRecords.filter((listing) => listing.status === 'ACTIVE');
+export function getParticipantById(workspace: TradingWorkspace = seedTradingWorkspace, id: string) {
+  return workspace.participants.find((participant) => participant.id === id);
 }
 
-export function getMarketplaceCompanies() {
-  return Array.from(
-    new Set(getActiveListings().map((listing) => listing.companyName)),
-  ).map((companyName) => ({
-    companyName,
-    listings: getActiveListings().filter((listing) => listing.companyName === companyName),
-    activeDeals: dealRecords.filter((deal) => deal.companyName === companyName).length,
-  }));
+export function getActiveListings(workspace: TradingWorkspace = seedTradingWorkspace) {
+  return workspace.listingRecords.filter((listing) => listing.status === 'ACTIVE');
 }
 
-export function getBidRegistry() {
-  return bidOrders.map((bid) => ({
+export function getMarketplaceCompanies(workspace: TradingWorkspace = seedTradingWorkspace) {
+  return Array.from(new Set(getActiveListings(workspace).map((listing) => listing.companyName))).map(
+    (companyName) => ({
+      companyName,
+      listings: getActiveListings(workspace).filter((listing) => listing.companyName === companyName),
+      activeDeals: workspace.dealRecords.filter((deal) => deal.companyName === companyName).length,
+    }),
+  );
+}
+
+export function getBidRegistry(workspace: TradingWorkspace = seedTradingWorkspace) {
+  return workspace.bidOrders.map((bid) => ({
     ...bid,
-    buyer: getParticipantById(bid.buyerId),
+    buyer: getParticipantById(workspace, bid.buyerId),
   }));
 }
 
-export function getAskRegistry() {
-  return askOrders.map((ask) => ({
+export function getAskRegistry(workspace: TradingWorkspace = seedTradingWorkspace) {
+  return workspace.askOrders.map((ask) => ({
     ...ask,
-    seller: getParticipantById(ask.sellerId),
+    seller: getParticipantById(workspace, ask.sellerId),
   }));
 }
 
-export function getPipelineCounts() {
+export function getPipelineCounts(workspace: TradingWorkspace = seedTradingWorkspace) {
   return dealStages.map((stage) => ({
     stage,
-    count: dealRecords.filter((deal) => deal.currentStage === stage).length,
+    count: workspace.dealRecords.filter((deal) => deal.currentStage === stage).length,
   }));
 }
 
-export function getFARecommendationQueue() {
-  return faRecommendationLeads.map((lead) => ({
+export function getFARecommendationQueue(workspace: TradingWorkspace = seedTradingWorkspace) {
+  return workspace.faRecommendationLeads.map((lead) => ({
     ...lead,
-    listing: listingRecords.find((listing) => listing.id === lead.recommendedListingId) || null,
+    listing: workspace.listingRecords.find((listing) => listing.id === lead.recommendedListingId) || null,
   }));
 }
 
-export function getPlatformAgreementBoard() {
-  return platformMandateAgreements.map((agreement) => ({
+export function getPlatformAgreementBoard(workspace: TradingWorkspace = seedTradingWorkspace) {
+  return workspace.platformMandateAgreements.map((agreement) => ({
     ...agreement,
     deal: agreement.relatedDealId
-      ? dealRecords.find((deal) => deal.id === agreement.relatedDealId) || null
+      ? workspace.dealRecords.find((deal) => deal.id === agreement.relatedDealId) || null
       : null,
   }));
 }
 
-export function getReferralRewards() {
-  return referralRewardRecords.map((reward) => ({
+export function getReferralRewards(workspace: TradingWorkspace = seedTradingWorkspace) {
+  return workspace.referralRewardRecords.map((reward) => ({
     ...reward,
     recommendation:
-      faRecommendationLeads.find((lead) => lead.id === reward.recommendationId) || null,
-    deal: dealRecords.find((deal) => deal.id === reward.relatedDealId) || null,
+      workspace.faRecommendationLeads.find((lead) => lead.id === reward.recommendationId) || null,
+    deal: workspace.dealRecords.find((deal) => deal.id === reward.relatedDealId) || null,
   }));
 }
 
 export function getTradeModeLabel(mode: TradeMode) {
   switch (mode) {
     case 'L1':
-      return 'L1 一级认购';
+      return 'L1 Primary';
     case 'L2':
-      return 'L2 匿名撮合';
+      return 'L2 Anonymous';
     case 'DIRECT':
-      return 'Direct 定向交易';
+      return 'Direct Trade';
   }
 }
 
 export function getDisclosureStageLabel(stage: DisclosureStage) {
   switch (stage) {
     case 'ANONYMOUS':
-      return '匿名展示';
+      return 'Anonymous';
     case 'NDA_ONLY':
-      return 'NDA 后披露';
+      return 'NDA gated';
     case 'NEGOTIATION_SUMMARY':
-      return '谈判摘要披露';
+      return 'Negotiation summary';
     case 'LEGAL_DISCLOSURE':
-      return '法务必要披露';
+      return 'Legal disclosure';
+  }
+}
+
+export function getDealStageLabel(stage: DealStage) {
+  switch (stage) {
+    case 'LISTED':
+      return 'Listed';
+    case 'NEGOTIATING':
+      return 'Negotiating';
+    case 'LOI_SIGNED':
+      return 'LOI signed';
+    case 'DILIGENCE':
+      return 'Diligence';
+    case 'SPA_SIGNED':
+      return 'SPA signed';
+    case 'ESCROW_FUNDED':
+      return 'Escrow funded';
+    case 'TRANSFER_IN_PROGRESS':
+      return 'Transfer in progress';
+    case 'SETTLEMENT_PENDING':
+      return 'Settlement pending';
+    case 'COMPLETED':
+      return 'Completed';
   }
 }
 

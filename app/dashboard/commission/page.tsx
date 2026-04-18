@@ -1,31 +1,27 @@
 'use client';
 
-import { useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
-import { faTeams, getReferralRewards } from '@/lib/trading-v2';
+import { useTradingWorkspace } from '@/hooks/useTradingWorkspace';
 import {
-  advanceRewardStatus,
   canAdvanceReward,
   getRewardActionLabel,
 } from '@/lib/trading-v2-workflow';
+import { getReferralRewards } from '@/lib/trading-v2';
 
 export default function CommissionPage() {
-  const [rewards, setRewards] = useState(getReferralRewards());
+  const { error, isPending, loading, runAction, workspace } = useTradingWorkspace();
 
-  const advanceReward = (id: string) => {
-    setRewards((current) =>
-      current.map((reward) =>
-        reward.id === id
-          ? {
-              ...reward,
-              ...advanceRewardStatus(reward),
-              recommendation: reward.recommendation,
-              deal: reward.deal,
-            }
-          : reward,
-      ),
+  if (loading || !workspace) {
+    return (
+      <DashboardLayout>
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-500">
+          Loading commission workspace...
+        </div>
+      </DashboardLayout>
     );
-  };
+  }
+
+  const rewards = getReferralRewards(workspace);
 
   return (
     <DashboardLayout>
@@ -33,12 +29,13 @@ export default function CommissionPage() {
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Commission & Referral Rewards</h1>
           <p className="mt-2 text-slate-500">
-            这里把两种分配拆开看：交易执行团队分佣，以及 FA 因推荐未注册买家并最终促成成交而获得的奖励。
+            Execution split and FA recommendation rewards are tracked separately, but now persist as one dataset.
           </p>
+          {error ? <p className="mt-2 text-sm text-red-600">{error}</p> : null}
         </div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-          <StatCard label="FA Teams" value={String(faTeams.length)} />
+          <StatCard label="FA Teams" value={String(workspace.faTeams.length)} />
           <StatCard label="Referral Rewards" value={String(rewards.length)} />
           <StatCard
             label="Pending Rewards"
@@ -47,8 +44,7 @@ export default function CommissionPage() {
           <StatCard
             label="Approved / Paid"
             value={String(
-              rewards.filter((item) => item.status === 'APPROVED' || item.status === 'PAID')
-                .length,
+              rewards.filter((item) => ['APPROVED', 'PAID'].includes(item.status)).length,
             )}
           />
         </div>
@@ -56,7 +52,7 @@ export default function CommissionPage() {
         <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="text-xl font-bold text-slate-900">FA Team Split</h2>
           <div className="mt-5 space-y-4">
-            {faTeams.map((team) => (
+            {workspace.faTeams.map((team) => (
               <div key={team.id} className="rounded-2xl border border-slate-200 p-5">
                 <div className="flex items-center justify-between">
                   <div>
@@ -73,7 +69,7 @@ export default function CommissionPage() {
                       className="flex items-center justify-between rounded-xl bg-slate-50 px-4 py-3 text-sm"
                     >
                       <span className="text-slate-700">
-                        {member.role} · {member.name}
+                        {member.role} / {member.name}
                       </span>
                       <span className="font-semibold text-slate-900">
                         {(member.commissionRatio * 100).toFixed(0)}%
@@ -89,7 +85,7 @@ export default function CommissionPage() {
         <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="text-xl font-bold text-slate-900">Referral Reward Board</h2>
           <p className="mt-1 text-sm text-slate-500">
-            规则：FA 推荐未注册买家，形成绑定关系后，如果后续 deal 落地，则按 reward board 发放推荐奖励。
+            Once the bound prospect closes, the recommendation reward can move from pending to approved to paid.
           </p>
 
           <div className="mt-5 overflow-x-auto">
@@ -120,8 +116,8 @@ export default function CommissionPage() {
                     </BodyCell>
                     <BodyCell>
                       <button
-                        onClick={() => advanceReward(reward.id)}
-                        disabled={!canAdvanceReward(reward.status)}
+                        onClick={() => runAction('advanceReward', reward.id)}
+                        disabled={!canAdvanceReward(reward.status) || isPending}
                         className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
                       >
                         {getRewardActionLabel(reward.status)}
@@ -148,7 +144,11 @@ function StatCard({ label, value }: { label: string; value: string }) {
 }
 
 function HeaderCell({ children }: { children: React.ReactNode }) {
-  return <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">{children}</th>;
+  return (
+    <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-slate-500">
+      {children}
+    </th>
+  );
 }
 
 function BodyCell({ children }: { children: React.ReactNode }) {
@@ -156,5 +156,9 @@ function BodyCell({ children }: { children: React.ReactNode }) {
 }
 
 function StatusPill({ children }: { children: React.ReactNode }) {
-  return <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">{children}</span>;
+  return (
+    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
+      {children}
+    </span>
+  );
 }
