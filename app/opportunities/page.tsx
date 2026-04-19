@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import BuyerLayout from '@/components/BuyerLayout';
+import { useTradingWorkspace } from '@/hooks/useTradingWorkspace';
 import {
   getActiveListings,
   getDisclosureStageLabel,
@@ -11,8 +12,24 @@ import {
 } from '@/lib/trading-v2';
 
 export default function OpportunitiesPage() {
-  const companies = getMarketplaceCompanies();
-  const listings = getActiveListings();
+  const { error, loading, workspace } = useTradingWorkspace();
+
+  if (loading || !workspace) {
+    return (
+      <BuyerLayout>
+        <section className="py-16">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 text-sm text-slate-500">
+              Loading marketplace listings...
+            </div>
+          </div>
+        </section>
+      </BuyerLayout>
+    );
+  }
+
+  const companies = getMarketplaceCompanies(workspace);
+  const listings = getActiveListings(workspace);
 
   return (
     <BuyerLayout>
@@ -23,12 +40,13 @@ export default function OpportunitiesPage() {
               PRD V2 Marketplace
             </p>
             <h1 className="text-4xl font-bold text-white sm:text-5xl">
-              用 `L1 / L2 / Direct` 三种交易方式来组织 Pre-IPO 交易机会
+              Marketplace built on live L1 / L2 / Direct workflow data
             </h1>
             <p className="mt-4 max-w-3xl text-lg text-blue-100">
-              当前阶段只展示符合 PRD V2 的标准化 listing：交易方式、股份类别、价格区间、
-              数量区间、卖方隐私级别、验证状态，以及 market signal。
+              This page now reads from the persisted workspace. New asks, active listings, and market signals
+              can flow here as the execution chain advances.
             </p>
+            {error ? <p className="mt-4 text-sm text-red-300">{error}</p> : null}
           </div>
         </div>
       </section>
@@ -36,24 +54,14 @@ export default function OpportunitiesPage() {
       <section className="py-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-            <div className="rounded-2xl border border-slate-200 bg-white p-5">
-              <p className="text-sm text-slate-500">Active Listings</p>
-              <p className="mt-2 text-3xl font-bold text-slate-900">{listings.length}</p>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-5">
-              <p className="text-sm text-slate-500">Companies</p>
-              <p className="mt-2 text-3xl font-bold text-slate-900">{companies.length}</p>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-5">
-              <p className="text-sm text-slate-500">Open Bid Signals</p>
-              <p className="mt-2 text-3xl font-bold text-blue-600">
-                {listings.reduce((sum, listing) => sum + listing.activeBidCount, 0)}
-              </p>
-            </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-5">
-              <p className="text-sm text-slate-500">Privacy Guard</p>
-              <p className="mt-2 text-lg font-bold text-slate-900">Seller Alias Only</p>
-            </div>
+            <MetricCard label="Active Listings" value={String(listings.length)} />
+            <MetricCard label="Companies" value={String(companies.length)} />
+            <MetricCard
+              label="Open Bid Signals"
+              value={String(listings.reduce((sum, listing) => sum + listing.activeBidCount, 0))}
+              tone="blue"
+            />
+            <MetricCard label="Privacy Guard" value="Seller Alias Only" compact />
           </div>
 
           <div className="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -63,7 +71,7 @@ export default function OpportunitiesPage() {
                   <div>
                     <h2 className="text-2xl font-bold text-slate-900">{company.companyName}</h2>
                     <p className="mt-1 text-sm text-slate-500">
-                      {company.listings.length} listings · {company.activeDeals} active deals
+                      {company.listings.length} listings / {company.activeDeals} active deals
                     </p>
                   </div>
                   <Link
@@ -94,22 +102,10 @@ export default function OpportunitiesPage() {
                       </div>
 
                       <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <p className="text-slate-500">Share Class</p>
-                          <p className="font-semibold text-slate-900">{listing.shareClass}</p>
-                        </div>
-                        <div>
-                          <p className="text-slate-500">Seller Alias</p>
-                          <p className="font-semibold text-slate-900">{listing.sellerAlias}</p>
-                        </div>
-                        <div>
-                          <p className="text-slate-500">Price Range</p>
-                          <p className="font-semibold text-slate-900">{listing.priceRangeLabel}</p>
-                        </div>
-                        <div>
-                          <p className="text-slate-500">Quantity Range</p>
-                          <p className="font-semibold text-slate-900">{listing.quantityRangeLabel}</p>
-                        </div>
+                        <ListingField label="Share Class" value={listing.shareClass} />
+                        <ListingField label="Seller Alias" value={listing.sellerAlias} />
+                        <ListingField label="Price Range" value={listing.priceRangeLabel} />
+                        <ListingField label="Quantity Range" value={listing.quantityRangeLabel} />
                       </div>
 
                       <div className="mt-4 flex flex-wrap gap-4 text-sm text-slate-600">
@@ -126,5 +122,35 @@ export default function OpportunitiesPage() {
         </div>
       </section>
     </BuyerLayout>
+  );
+}
+
+function MetricCard({
+  compact = false,
+  label,
+  tone = 'slate',
+  value,
+}: {
+  compact?: boolean;
+  label: string;
+  tone?: 'blue' | 'slate';
+  value: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5">
+      <p className="text-sm text-slate-500">{label}</p>
+      <p className={`mt-2 font-bold ${compact ? 'text-lg' : 'text-3xl'} ${tone === 'blue' ? 'text-blue-600' : 'text-slate-900'}`}>
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function ListingField({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-slate-500">{label}</p>
+      <p className="font-semibold text-slate-900">{value}</p>
+    </div>
   );
 }

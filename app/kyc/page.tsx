@@ -4,45 +4,17 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import BuyerLayout from '@/components/BuyerLayout';
 import { useLang } from '@/contexts/LangContext';
+import { useTradingWorkspace } from '@/hooks/useTradingWorkspace';
+import { kycRoleDocumentMap } from '@/lib/trading-v2';
 
-const roleDocumentMap = {
-  BUYER: [
-    'Government ID or passport',
-    'Proof of address within 3 months',
-    'Accredited investor evidence',
-    'Source of funds declaration',
-    'Bank account for escrow or settlement',
-  ],
-  SELLER: [
-    'Government ID or passport',
-    'Proof of address within 3 months',
-    'Stock certificate or equity platform proof',
-    'Grant, exercise, or acquisition agreement',
-    'Transfer restriction and ROFR disclosure',
-    'Receiving bank account for settlement',
-  ],
-  INSTITUTION: [
-    'Certificate of incorporation or registration',
-    'Company registration number and jurisdiction',
-    'Authorized signatory ID',
-    'Board resolution or authorization letter',
-    'UBO or control person details',
-    'Institutional accreditation evidence',
-  ],
-  FA: [
-    'FA license or qualification file',
-    'Service agreement with platform',
-    'Commission receiving bank account',
-    'Compliance training completion',
-  ],
-} as const;
-
-type RoleKey = keyof typeof roleDocumentMap;
+type RoleKey = keyof typeof kycRoleDocumentMap;
 
 export default function KYCPage() {
   const { t } = useLang();
+  const { error, isPending, runAction } = useTradingWorkspace();
   const [step, setStep] = useState(1);
   const [role, setRole] = useState<RoleKey>('BUYER');
+  const [submitted, setSubmitted] = useState(false);
   const [formData, setFormData] = useState({
     companyName: '',
     registrationNumber: '',
@@ -69,7 +41,22 @@ export default function KYCPage() {
     { num: 5, title: t('kyc.step5') },
   ];
 
-  const requiredDocs = roleDocumentMap[role];
+  const requiredDocs = kycRoleDocumentMap[role];
+
+  const handleSubmit = async () => {
+    await runAction('createKycSubmission', undefined, {
+      role,
+      companyName: formData.companyName,
+      registrationNumber: formData.registrationNumber,
+      country: formData.country,
+      contactName: formData.contactName,
+      email: formData.email,
+      phone: formData.phone,
+      investorType: formData.investorType,
+      aum: formData.aum,
+    });
+    setSubmitted(true);
+  };
 
   return (
     <BuyerLayout>
@@ -355,12 +342,19 @@ export default function KYCPage() {
                     Back
                   </button>
                   <button
-                    onClick={() => alert(t('kyc.successDesc'))}
-                    className="flex-1 rounded-lg bg-green-600 px-6 py-3 font-medium text-white hover:bg-green-700"
+                    onClick={handleSubmit}
+                    disabled={isPending}
+                    className="flex-1 rounded-lg bg-green-600 px-6 py-3 font-medium text-white hover:bg-green-700 disabled:bg-slate-300"
                   >
-                    {t('kyc.submit')}
+                    {isPending ? 'Submitting...' : t('kyc.submit')}
                   </button>
                 </div>
+                {error ? <p className="text-sm text-red-600">{error}</p> : null}
+                {submitted ? (
+                  <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+                    KYC submission saved. Compliance should now see this case in the shared workspace queue.
+                  </div>
+                ) : null}
               </div>
             ) : null}
           </div>

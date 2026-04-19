@@ -36,11 +36,54 @@ export default function IntentRegistryPage() {
         </div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+          <StatCard label="KYC Cases" value={String(workspace.kycSubmissions.length)} tone="purple" />
           <StatCard label="Bid Orders" value={String(bidRegistry.length)} tone="blue" />
           <StatCard label="Ask Orders" value={String(askRegistry.length)} tone="emerald" />
           <StatCard label="Active Listings" value={String(workspace.listingRecords.length)} tone="slate" />
-          <StatCard label="Match Queue" value={String(workspace.orderMatches.length)} tone="purple" />
         </div>
+
+        <RegistrySection
+          title="KYC Submission Queue"
+          description="Front-end KYC submissions now enter the persisted workspace and can be reviewed together with bid and ask intake."
+        >
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-slate-50">
+                <tr>
+                  <HeaderCell>Role</HeaderCell>
+                  <HeaderCell>Company</HeaderCell>
+                  <HeaderCell>Contact</HeaderCell>
+                  <HeaderCell>Country</HeaderCell>
+                  <HeaderCell>Investor Type</HeaderCell>
+                  <HeaderCell>AUM</HeaderCell>
+                  <HeaderCell>Status</HeaderCell>
+                  <HeaderCell>Created</HeaderCell>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200">
+                {workspace.kycSubmissions.map((submission) => (
+                  <tr key={submission.id}>
+                    <BodyCell>{submission.role}</BodyCell>
+                    <BodyCell>{submission.companyName}</BodyCell>
+                    <BodyCell>
+                      <div>
+                        <p>{submission.contactName}</p>
+                        <p className="text-xs text-slate-500">{submission.email}</p>
+                      </div>
+                    </BodyCell>
+                    <BodyCell>{submission.country}</BodyCell>
+                    <BodyCell>{submission.investorType}</BodyCell>
+                    <BodyCell>{submission.aum}</BodyCell>
+                    <BodyCell>
+                      <StatusPill>{submission.status}</StatusPill>
+                    </BodyCell>
+                    <BodyCell>{submission.createdAt}</BodyCell>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </RegistrySection>
 
         <RegistrySection
           title="Buyer Bid Orders"

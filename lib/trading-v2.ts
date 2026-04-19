@@ -308,6 +308,22 @@ export interface DashboardTask {
   relatedEntity: 'KYC' | 'ASK' | 'DEAL' | 'ESCROW' | 'APPROVAL';
 }
 
+export interface KycSubmission {
+  id: string;
+  role: 'BUYER' | 'SELLER' | 'INSTITUTION' | 'FA';
+  companyName: string;
+  registrationNumber: string;
+  country: string;
+  contactName: string;
+  email: string;
+  phone: string;
+  investorType: string;
+  aum: string;
+  requiredDocuments: string[];
+  status: 'SUBMITTED' | 'IN_REVIEW' | 'APPROVED' | 'NEEDS_MORE_INFO';
+  createdAt: string;
+}
+
 export interface DocumentReviewRecord {
   id: string;
   entityType: 'BUYER_KYC' | 'SELLER_KYC' | 'ASK_OWNERSHIP' | 'DEAL_LEGAL';
@@ -376,6 +392,7 @@ export interface TradingWorkspace {
   transferApprovals: TransferApproval[];
   escrowRecords: EscrowRecord[];
   dashboardTasks: DashboardTask[];
+  kycSubmissions: KycSubmission[];
   documentReviewRecords: DocumentReviewRecord[];
   sellerDisclosureRecords: SellerDisclosureRecord[];
   settlementStatements: SettlementStatement[];
@@ -394,6 +411,38 @@ export const dealStages: DealStage[] = [
   'COMPLETED',
 ];
 
+export const kycRoleDocumentMap = {
+  BUYER: [
+    'Government ID or passport',
+    'Proof of address within 3 months',
+    'Accredited investor evidence',
+    'Source of funds declaration',
+    'Bank account for escrow or settlement',
+  ],
+  SELLER: [
+    'Government ID or passport',
+    'Proof of address within 3 months',
+    'Stock certificate or equity platform proof',
+    'Grant, exercise, or acquisition agreement',
+    'Transfer restriction and ROFR disclosure',
+    'Receiving bank account for settlement',
+  ],
+  INSTITUTION: [
+    'Certificate of incorporation or registration',
+    'Company registration number and jurisdiction',
+    'Authorized signatory ID',
+    'Board resolution or authorization letter',
+    'UBO or control person details',
+    'Institutional accreditation evidence',
+  ],
+  FA: [
+    'FA license or qualification file',
+    'Service agreement with platform',
+    'Commission receiving bank account',
+    'Compliance training completion',
+  ],
+} as const;
+
 export const seedTradingWorkspace = createSeedTradingWorkspace();
 export const participants = seedTradingWorkspace.participants;
 export const buyerLeads = seedTradingWorkspace.buyerLeads;
@@ -406,6 +455,7 @@ export const dealRecords = seedTradingWorkspace.dealRecords;
 export const faRecommendationLeads = seedTradingWorkspace.faRecommendationLeads;
 export const platformMandateAgreements = seedTradingWorkspace.platformMandateAgreements;
 export const referralRewardRecords = seedTradingWorkspace.referralRewardRecords;
+export const kycSubmissions = seedTradingWorkspace.kycSubmissions;
 export const documentReviewRecords = seedTradingWorkspace.documentReviewRecords;
 export const sellerDisclosureRecords = seedTradingWorkspace.sellerDisclosureRecords;
 export const settlementStatements = seedTradingWorkspace.settlementStatements;
@@ -1046,6 +1096,51 @@ export function createSeedTradingWorkspace(): TradingWorkspace {
         relatedEntity: 'ESCROW',
       },
     ],
+    kycSubmissions: [
+      {
+        id: 'kyc-1',
+        role: 'BUYER',
+        companyName: 'CITIC Hong Kong',
+        registrationNumber: 'HK-998201',
+        country: 'HK',
+        contactName: 'Amanda Lee',
+        email: 'amanda@citichk.example',
+        phone: '+852 5555 2001',
+        investorType: 'institutional',
+        aum: '>50M',
+        requiredDocuments: [
+          'Government ID or passport',
+          'Proof of address within 3 months',
+          'Accredited investor evidence',
+          'Source of funds declaration',
+          'Bank account for escrow or settlement',
+        ],
+        status: 'APPROVED',
+        createdAt: '2026-04-05',
+      },
+      {
+        id: 'kyc-2',
+        role: 'SELLER',
+        companyName: 'Verified Seller BD-01',
+        registrationNumber: 'CN-EMP-2026-12',
+        country: 'CN',
+        contactName: 'Seller BD-01',
+        email: 'seller-bd-01@example.com',
+        phone: '+86 13800001234',
+        investorType: 'individual',
+        aum: '10M-50M',
+        requiredDocuments: [
+          'Government ID or passport',
+          'Proof of address within 3 months',
+          'Stock certificate or equity platform proof',
+          'Grant, exercise, or acquisition agreement',
+          'Transfer restriction and ROFR disclosure',
+          'Receiving bank account for settlement',
+        ],
+        status: 'IN_REVIEW',
+        createdAt: '2026-04-11',
+      },
+    ],
     documentReviewRecords: [
       {
         id: 'doc-1',
@@ -1200,6 +1295,7 @@ export function normalizeTradingWorkspace(workspace: Partial<TradingWorkspace>):
     transferApprovals: mergeSeedById(workspace.transferApprovals, seed.transferApprovals),
     escrowRecords: mergeSeedById(workspace.escrowRecords, seed.escrowRecords),
     dashboardTasks: mergeSeedById(workspace.dashboardTasks, seed.dashboardTasks),
+    kycSubmissions: mergeSeedById(workspace.kycSubmissions, seed.kycSubmissions),
     documentReviewRecords: mergeSeedById(
       workspace.documentReviewRecords,
       seed.documentReviewRecords,

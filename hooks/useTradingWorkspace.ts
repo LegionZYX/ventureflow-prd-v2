@@ -18,14 +18,17 @@ type TradingAction =
   | 'advanceDocumentReview'
   | 'advanceSellerDisclosure'
   | 'advanceSettlement'
-  | 'advanceSellerPayout';
+  | 'advanceSellerPayout'
+  | 'createBid'
+  | 'createAsk'
+  | 'createKycSubmission';
 
 interface UseTradingWorkspaceResult {
   error: string | null;
   isPending: boolean;
   loading: boolean;
   refresh: () => Promise<void>;
-  runAction: (action: TradingAction, id: string) => Promise<void>;
+  runAction: (action: TradingAction, id?: string, payload?: unknown) => Promise<void>;
   workspace: TradingWorkspace | null;
 }
 
@@ -53,7 +56,7 @@ export function useTradingWorkspace(): UseTradingWorkspaceResult {
     }
   };
 
-  const runAction = async (action: TradingAction, id: string) => {
+  const runAction = async (action: TradingAction, id?: string, payload?: unknown) => {
     setError(null);
 
     startTransition(() => {
@@ -64,7 +67,7 @@ export function useTradingWorkspace(): UseTradingWorkspaceResult {
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ action, id }),
+            body: JSON.stringify({ action, id, payload }),
           });
 
           if (!response.ok) {

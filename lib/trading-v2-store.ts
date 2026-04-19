@@ -2,6 +2,7 @@ import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import {
   createSeedTradingWorkspace,
+  kycRoleDocumentMap,
   normalizeTradingWorkspace,
   type TradingWorkspace,
 } from '@/lib/trading-v2';
@@ -41,9 +42,56 @@ type TradingAction =
   | 'advanceDocumentReview'
   | 'advanceSellerDisclosure'
   | 'advanceSettlement'
-  | 'advanceSellerPayout';
+  | 'advanceSellerPayout'
+  | 'createBid'
+  | 'createAsk'
+  | 'createKycSubmission';
+
+interface CreateBidPayload {
+  buyerName: string;
+  companyName: string;
+  shareClass: string;
+  tradeMode: 'L1' | 'L2' | 'DIRECT';
+  bidPriceLabel: string;
+  quantityLabel: string;
+  validUntil: string;
+  conditions: string[];
+}
+
+interface CreateAskPayload {
+  sellerAlias: string;
+  companyName: string;
+  shareClass: string;
+  tradeMode: 'L1' | 'L2' | 'DIRECT';
+  askPriceLabel: string;
+  quantityLabel: string;
+  validityLabel: string;
+  transferRestrictions: string;
+}
+
+interface CreateKycSubmissionPayload {
+  role: 'BUYER' | 'SELLER' | 'INSTITUTION' | 'FA';
+  companyName: string;
+  registrationNumber: string;
+  country: string;
+  contactName: string;
+  email: string;
+  phone: string;
+  investorType: string;
+  aum: string;
+}
+
+type TradingPayload = CreateBidPayload | CreateAskPayload | CreateKycSubmissionPayload;
 
 let writeQueue = Promise.resolve();
+
+function slugify(value: string) {
+  return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+}
+
+function createId(prefix: string, existingIds: string[]) {
+  return `${prefix}-${existingIds.length + 1}`;
+}
 
 async function ensureWorkspaceFile() {
   await mkdir(dataDirectory, { recursive: true });
@@ -93,7 +141,7 @@ export async function writeTradingWorkspace(
   return result;
 }
 
-export async function applyTradingAction(action: TradingAction, id: string) {
+export async function applyTradingAction(action: TradingAction, id?: string, payload?: TradingPayload) {
   return writeTradingWorkspace((workspace) => {
     switch (action) {
       case 'advanceRecommendation':
@@ -201,10 +249,188 @@ export async function applyTradingAction(action: TradingAction, id: string) {
             record.id === id ? advanceSellerPayout(record) : record,
           ),
         };
+      case 'createBid': {
+        if (!payload || !('buyerName' in payload)) {
+          return workspace;
+        }
+
+        const participantId = createId(
+          'buyer-submitted',
+          workspace.participants.map((participant) => participant.id),
+        );
+        const bidId = createId('bid', workspace.bidOrders.map((bid) => bid.id));
+        const companyId = slugify(payload.companyName);
+
+        return {
+          ...workspace,
+          participants: [
+            ...workspace.participants,
+            {
+              id: participantId,
+              displayName: payload.buyerName,
+              role: 'BUYER',
+              entityType: 'INSTITUTION',
+              region: 'Pending KYC',
+              kycStatus: 'IN_REVIEW',
+              qualified: false,
+            },
+          ],
+          bidOrders: [
+            {
+              id: bidId,
+              buyerId: participantId,
+              companyId,
+              companyName: payload.companyName,
+              tradeMode: payload.tradeMode,
+              shareClass: payload.shareClass,
+              bidPriceLabel: payload.bidPriceLabel,
+              quantityLabel: payload.quantityLabel,
+              remainingQuantityLabel: payload.quantityLabel,
+              validUntil: payload.validUntil,
+              accreditedInvestor: false,
+              conditions: payload.conditions,
+              status: 'COMPLIANCE_REVIEW',
+            },
+            ...workspace.bidOrders,
+          ],
+          dashboardTasks: [
+            {
+              id: createId('task', workspace.dashboardTasks.map((task) => task.id)),
+              companyName: payload.companyName,
+              owner: 'Compliance',
+              title: `Review new buyer bid ${bidId}`,
+              dueLabel: 'Today',
+              status: 'OPEN',
+              relatedEntity: 'KYC',
+            },
+            ...workspace.dashboardTasks,
+          ],
+        };
+      }
+      case 'createAsk': {
+        if (!payload || !('sellerAlias' in payload)) {
+          return workspace;
+        }
+
+        const participantId = createId(
+          'seller-submitted',
+          workspace.participants.map((participant) => participant.id),
+        );
+        const askId = createId('ask', workspace.askOrders.map((ask) => ask.id));
+        const companyId = slugify(payload.companyName);
+
+        return {
+          ...workspace,
+          participants: [
+            ...workspace.participants,
+            {
+              id: participantId,
+              displayName: payload.sellerAlias,
+              role: 'SELLER',
+              entityType: 'INDIVIDUAL',
+              region: 'Pending ownership review',
+              kycStatus: 'IN_REVIEW',
+              qualified: false,
+            },
+          ],
+          askOrders: [
+            {
+              id: askId,
+              sellerId: participantId,
+              sellerAlias: payload.sellerAlias,
+              companyId,
+              companyName: payload.companyName,
+              tradeMode: payload.tradeMode,
+              shareClass: payload.shareClass,
+              quantityLabel: payload.quantityLabel,
+              remainingQuantityLabel: payload.quantityLabel,
+              askPriceLabel: payload.askPriceLabel,
+              validityLabel: payload.validityLabel,
+              transferRestrictions: payload.transferRestrictions,
+              ownershipStatus: 'PENDING',
+              privacyLevel: 'CONTROLLED_DISCLOSURE',
+              status: 'OWNERSHIP_REVIEW',
+            },
+            ...workspace.askOrders,
+          ],
+          documentReviewRecords: [
+            {
+              id: createId('doc', workspace.documentReviewRecords.map((record) => record.id)),
+              entityType: 'ASK_OWNERSHIP',
+              entityId: askId,
+              companyName: payload.companyName,
+              owner: 'Platform legal',
+              requiredDocuments: [
+                'Stock certificate or equity platform proof',
+                'Grant, exercise, or acquisition agreement',
+                'Transfer restriction and ROFR disclosure',
+              ],
+              missingDocuments: [
+                'Stock certificate or equity platform proof',
+                'Transfer restriction and ROFR disclosure',
+              ],
+              status: 'PENDING',
+              lastUpdated: '2026-04-19',
+            },
+            ...workspace.documentReviewRecords,
+          ],
+          dashboardTasks: [
+            {
+              id: createId('task', workspace.dashboardTasks.map((task) => task.id)),
+              companyName: payload.companyName,
+              owner: 'Legal',
+              title: `Verify ownership package for ${askId}`,
+              dueLabel: 'Today',
+              status: 'OPEN',
+              relatedEntity: 'ASK',
+            },
+            ...workspace.dashboardTasks,
+          ],
+        };
+      }
+      case 'createKycSubmission': {
+        if (!payload || !('registrationNumber' in payload)) {
+          return workspace;
+        }
+
+        return {
+          ...workspace,
+          kycSubmissions: [
+            {
+              id: createId('kyc', workspace.kycSubmissions.map((submission) => submission.id)),
+              role: payload.role,
+              companyName: payload.companyName,
+              registrationNumber: payload.registrationNumber,
+              country: payload.country,
+              contactName: payload.contactName,
+              email: payload.email,
+              phone: payload.phone,
+              investorType: payload.investorType,
+              aum: payload.aum,
+              requiredDocuments: [...kycRoleDocumentMap[payload.role]],
+              status: 'SUBMITTED',
+              createdAt: '2026-04-19',
+            },
+            ...workspace.kycSubmissions,
+          ],
+          dashboardTasks: [
+            {
+              id: createId('task', workspace.dashboardTasks.map((task) => task.id)),
+              companyName: payload.companyName,
+              owner: 'Compliance',
+              title: `Review KYC submission for ${payload.companyName}`,
+              dueLabel: 'Today',
+              status: 'OPEN',
+              relatedEntity: 'KYC',
+            },
+            ...workspace.dashboardTasks,
+          ],
+        };
+      }
       default:
         return workspace;
     }
   });
 }
 
-export type { TradingAction };
+export type { TradingAction, TradingPayload };
