@@ -270,6 +270,15 @@ export default function IntentRegistryPage() {
                   <p className="mt-3 text-sm text-slate-700">
                     Match score {match.matchScore} / Lead FA {match.leadFaId}
                   </p>
+                  <div className="mt-4 flex justify-end">
+                    <ActionButton
+                      onClick={() => runAction('convertMatch', match.id)}
+                      disabled={match.status === 'CONVERTED' || isPending}
+                      tone="blue"
+                    >
+                      {match.status === 'CONVERTED' ? 'Deal Opened' : 'Create Deal'}
+                    </ActionButton>
+                  </div>
                 </div>
               ))}
             </div>

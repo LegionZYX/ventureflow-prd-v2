@@ -45,7 +45,8 @@ type TradingAction =
   | 'advanceSellerPayout'
   | 'createBid'
   | 'createAsk'
-  | 'createKycSubmission';
+  | 'createKycSubmission'
+  | 'convertMatch';
 
 interface CreateBidPayload {
   buyerName: string;
@@ -91,6 +92,260 @@ function slugify(value: string) {
 
 function createId(prefix: string, existingIds: string[]) {
   return `${prefix}-${existingIds.length + 1}`;
+}
+
+function estimateMatchScore() {
+  return 88;
+}
+
+function ensureListingForAsk(current: TradingWorkspace, askId: string) {
+  const ask = current.askOrders.find((item) => item.id === askId);
+
+  if (!ask || ask.ownershipStatus !== 'VERIFIED' || ask.status !== 'ACTIVE_LISTING') {
+    return current;
+  }
+
+  const existingListing = current.listingRecords.find((listing) => listing.askOrderId === ask.id);
+
+  if (existingListing) {
+    return current;
+  }
+
+  return {
+    ...current,
+    listingRecords: [
+      {
+        id: createId('listing', current.listingRecords.map((listing) => listing.id)),
+        askOrderId: ask.id,
+        companyId: ask.companyId,
+        companyName: ask.companyName,
+        tradeMode: ask.tradeMode,
+        shareClass: ask.shareClass,
+        priceRangeLabel: ask.askPriceLabel,
+        quantityRangeLabel: ask.quantityLabel,
+        sellerAlias: ask.sellerAlias,
+        sellerVerification: ask.ownershipStatus,
+        disclosureStage:
+          ask.privacyLevel === 'PUBLIC_ANONYMOUS'
+            ? ('ANONYMOUS' as const)
+            : ('NDA_ONLY' as const),
+        activeBidCount: current.bidOrders.filter(
+          (bid) =>
+            bid.companyName === ask.companyName &&
+            bid.shareClass === ask.shareClass &&
+            bid.tradeMode === ask.tradeMode &&
+            bid.status === 'ACTIVE',
+        ).length,
+        activeMatchCount: 0,
+        status: 'ACTIVE' as const,
+      },
+      ...current.listingRecords,
+    ],
+  };
+}
+
+function attachMatchesForAsk(current: TradingWorkspace, askId: string) {
+  const ask = current.askOrders.find((item) => item.id === askId);
+
+  if (!ask || ask.status !== 'ACTIVE_LISTING') {
+    return current;
+  }
+
+  const eligibleBids = current.bidOrders.filter(
+    (bid) =>
+      bid.companyName === ask.companyName &&
+      bid.shareClass === ask.shareClass &&
+      bid.tradeMode === ask.tradeMode &&
+      bid.status === 'ACTIVE',
+  );
+
+  const newMatches = eligibleBids
+    .filter(
+      (bid) =>
+        !current.orderMatches.some(
+          (match) => match.bidOrderId === bid.id && match.askOrderId === ask.id,
+        ),
+    )
+    .map((bid, index) => ({
+      id: `match-${current.orderMatches.length + index + 1}`,
+      bidOrderId: bid.id,
+      askOrderId: ask.id,
+      companyName: ask.companyName,
+      tradeMode: ask.tradeMode,
+      matchScore: estimateMatchScore(),
+      status: 'REVIEWING' as const,
+      leadFaId: current.faRecommendationLeads[0]?.faId ?? 'fa-lead-01',
+    }));
+
+  if (newMatches.length === 0) {
+    return current;
+  }
+
+  return {
+    ...current,
+    orderMatches: [...newMatches, ...current.orderMatches],
+    listingRecords: current.listingRecords.map((listing) =>
+      listing.askOrderId === ask.id
+        ? {
+            ...listing,
+            activeBidCount: eligibleBids.length,
+            activeMatchCount: listing.activeMatchCount + newMatches.length,
+          }
+        : listing,
+    ),
+  };
+}
+
+function attachMatchesForBid(current: TradingWorkspace, bidId: string) {
+  const bid = current.bidOrders.find((item) => item.id === bidId);
+
+  if (!bid || bid.status !== 'ACTIVE') {
+    return current;
+  }
+
+  const eligibleListings = current.listingRecords.filter(
+    (listing) =>
+      listing.companyName === bid.companyName &&
+      listing.shareClass === bid.shareClass &&
+      listing.tradeMode === bid.tradeMode &&
+      listing.status === 'ACTIVE',
+  );
+
+  const newMatches = eligibleListings
+    .filter(
+      (listing) =>
+        !current.orderMatches.some(
+          (match) => match.bidOrderId === bid.id && match.askOrderId === listing.askOrderId,
+        ),
+    )
+    .map((listing, index) => ({
+      id: `match-${current.orderMatches.length + index + 1}`,
+      bidOrderId: bid.id,
+      askOrderId: listing.askOrderId,
+      companyName: bid.companyName,
+      tradeMode: bid.tradeMode,
+      matchScore: estimateMatchScore(),
+      status: 'REVIEWING' as const,
+      leadFaId: current.faRecommendationLeads[0]?.faId ?? 'fa-lead-01',
+    }));
+
+  if (newMatches.length === 0) {
+    return current;
+  }
+
+  return {
+    ...current,
+    orderMatches: [...newMatches, ...current.orderMatches],
+    listingRecords: current.listingRecords.map((listing) =>
+      eligibleListings.some((item) => item.id === listing.id)
+        ? {
+            ...listing,
+            activeBidCount: listing.activeBidCount + 1,
+            activeMatchCount: listing.activeMatchCount + newMatches.filter(
+              (match) => match.askOrderId === listing.askOrderId,
+            ).length,
+          }
+        : listing,
+    ),
+  };
+}
+
+function createDealFromMatch(current: TradingWorkspace, matchId: string) {
+  const match = current.orderMatches.find((item) => item.id === matchId);
+
+  if (!match || match.status === 'CONVERTED') {
+    return current;
+  }
+
+  const bid = current.bidOrders.find((item) => item.id === match.bidOrderId);
+  const ask = current.askOrders.find((item) => item.id === match.askOrderId);
+  const listing = current.listingRecords.find((item) => item.askOrderId === match.askOrderId);
+
+  if (!bid || !ask || !listing) {
+    return current;
+  }
+
+  const dealId = createId('deal', current.dealRecords.map((deal) => deal.id));
+  const buyer = current.participants.find((participant) => participant.id === bid.buyerId);
+  const nextAgreementIds = current.platformMandateAgreements.map((agreement) => agreement.id);
+  const buyerAgreementId = createId('agreement', nextAgreementIds);
+  const sellerAgreementId = createId('agreement', [...nextAgreementIds, buyerAgreementId]);
+
+  return {
+    ...current,
+    orderMatches: current.orderMatches.map((item) =>
+      item.id === matchId ? { ...item, status: 'CONVERTED' as const } : item,
+    ),
+    bidOrders: current.bidOrders.map((item) =>
+      item.id === bid.id ? { ...item, status: 'DEAL_CREATED' as const } : item,
+    ),
+    askOrders: current.askOrders.map((item) =>
+      item.id === ask.id ? { ...item, status: 'DEAL_CREATED' as const } : item,
+    ),
+    dealRecords: [
+      {
+        id: dealId,
+        listingId: listing.id,
+        bidOrderId: bid.id,
+        askOrderId: ask.id,
+        companyName: match.companyName,
+        tradeMode: match.tradeMode,
+        shareClass: ask.shareClass,
+        amountLabel: `${bid.bidPriceLabel} / ${bid.quantityLabel}`,
+        currentStage: 'NEGOTIATING' as const,
+        disclosureStage: listing.disclosureStage,
+        loiSigned: false,
+        dataRoomReady: false,
+        escrowReady: false,
+        settlementReady: false,
+        leadFaTeamId: current.faTeams[0]?.id ?? 'fa-team-1',
+      },
+      ...current.dealRecords,
+    ],
+    platformMandateAgreements: [
+      {
+        id: buyerAgreementId,
+        side: 'BUYER' as const,
+        principalName: buyer?.displayName ?? bid.buyerId,
+        principalType: 'REGISTERED_BUYER' as const,
+        relatedDealId: dealId,
+        contractWith: 'PLATFORM' as const,
+        agreementType: 'BUYER_MANDATE' as const,
+        status: 'DRAFT' as const,
+        signedDate: '2026-04-19',
+        signingMethod: 'E_SIGN' as const,
+        certificationStatus: 'PENDING' as const,
+      },
+      {
+        id: sellerAgreementId,
+        side: 'SELLER' as const,
+        principalName: ask.sellerAlias,
+        principalType: 'SELLER' as const,
+        relatedDealId: dealId,
+        contractWith: 'PLATFORM' as const,
+        agreementType: 'SELLER_MANDATE' as const,
+        status: 'DRAFT' as const,
+        signedDate: '2026-04-19',
+        signingMethod: 'PAPER_WITNESSED' as const,
+        witnessType: 'LAWYER' as const,
+        witnessLawFirm: 'Pending counsel confirmation',
+        certificationStatus: 'PENDING' as const,
+      },
+      ...current.platformMandateAgreements,
+    ],
+    dashboardTasks: [
+      {
+        id: createId('task', current.dashboardTasks.map((task) => task.id)),
+        companyName: match.companyName,
+        owner: 'Execution desk',
+        title: `Open deal room for ${dealId}`,
+        dueLabel: 'Today',
+        status: 'OPEN' as const,
+        relatedEntity: 'DEAL' as const,
+      },
+      ...current.dashboardTasks,
+    ],
+  };
 }
 
 async function ensureWorkspaceFile() {
@@ -222,12 +477,48 @@ export async function applyTradingAction(action: TradingAction, id?: string, pay
           ),
         };
       case 'advanceDocumentReview':
-        return {
-          ...workspace,
-          documentReviewRecords: workspace.documentReviewRecords.map((record) =>
+        {
+          const updatedRecords = workspace.documentReviewRecords.map((record) =>
             record.id === id ? advanceDocumentReview(record) : record,
-          ),
-        };
+          );
+          const updatedRecord = updatedRecords.find((record) => record.id === id);
+
+          let nextWorkspace: TradingWorkspace = {
+            ...workspace,
+            documentReviewRecords: updatedRecords,
+          };
+
+          if (updatedRecord?.status === 'APPROVED' && updatedRecord.entityType === 'BUYER_KYC') {
+            nextWorkspace = {
+              ...nextWorkspace,
+              bidOrders: nextWorkspace.bidOrders.map((bid) =>
+              bid.id === updatedRecord.entityId
+                  ? { ...bid, status: 'ACTIVE' as const, accreditedInvestor: true }
+                  : bid,
+              ),
+            };
+            nextWorkspace = attachMatchesForBid(nextWorkspace, updatedRecord.entityId);
+          }
+
+          if (updatedRecord?.status === 'APPROVED' && updatedRecord.entityType === 'ASK_OWNERSHIP') {
+            nextWorkspace = {
+              ...nextWorkspace,
+              askOrders: nextWorkspace.askOrders.map((ask) =>
+                ask.id === updatedRecord.entityId
+                  ? {
+                      ...ask,
+                      ownershipStatus: 'VERIFIED' as const,
+                      status: 'ACTIVE_LISTING' as const,
+                    }
+                  : ask,
+              ),
+            };
+            nextWorkspace = ensureListingForAsk(nextWorkspace, updatedRecord.entityId);
+            nextWorkspace = attachMatchesForAsk(nextWorkspace, updatedRecord.entityId);
+          }
+
+          return nextWorkspace;
+        }
       case 'advanceSellerDisclosure':
         return {
           ...workspace,
@@ -249,6 +540,8 @@ export async function applyTradingAction(action: TradingAction, id?: string, pay
             record.id === id ? advanceSellerPayout(record) : record,
           ),
         };
+      case 'convertMatch':
+        return createDealFromMatch(workspace, id ?? '');
       case 'createBid': {
         if (!payload || !('buyerName' in payload)) {
           return workspace;
@@ -292,6 +585,27 @@ export async function applyTradingAction(action: TradingAction, id?: string, pay
               status: 'COMPLIANCE_REVIEW',
             },
             ...workspace.bidOrders,
+          ],
+          documentReviewRecords: [
+            {
+              id: createId('doc', workspace.documentReviewRecords.map((record) => record.id)),
+              entityType: 'BUYER_KYC',
+              entityId: bidId,
+              companyName: payload.companyName,
+              owner: 'Compliance',
+              requiredDocuments: [
+                'Accredited investor evidence',
+                'Source of funds declaration',
+                'Bank account for escrow or settlement',
+              ],
+              missingDocuments: [
+                'Accredited investor evidence',
+                'Source of funds declaration',
+              ],
+              status: 'PENDING',
+              lastUpdated: '2026-04-19',
+            },
+            ...workspace.documentReviewRecords,
           ],
           dashboardTasks: [
             {

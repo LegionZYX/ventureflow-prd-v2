@@ -21,7 +21,8 @@ type TradingAction =
   | 'advanceSellerPayout'
   | 'createBid'
   | 'createAsk'
-  | 'createKycSubmission';
+  | 'createKycSubmission'
+  | 'convertMatch';
 
 interface UseTradingWorkspaceResult {
   error: string | null;
